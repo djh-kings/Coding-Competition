@@ -44,10 +44,10 @@ self.onmessage = async (e) => {
     const py = await loadPy();
 
     py.setStdout({
-      batched: (text) => self.postMessage({ type: "stdout", text: text + "\n" }),
+      raw: (charCode) => self.postMessage({ type: "stdout_char", char: String.fromCharCode(charCode) }),
     });
     py.setStderr({
-      batched: (text) => self.postMessage({ type: "stderr", text: text + "\n" }),
+      raw: (charCode) => self.postMessage({ type: "stderr_char", char: String.fromCharCode(charCode) }),
     });
     py.setStdin({
       stdin: () => {

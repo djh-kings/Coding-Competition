@@ -107,26 +107,43 @@ export function WorkspaceClient() {
     const worker = new Worker("/pyodide-worker.js");
     workerRef.current = worker;
 
+    let outBuf = "";
+    let errBuf = "";
+
+    const flushOut = () => {
+      if (!outBuf) return;
+      const parts = outBuf.split("\n");
+      for (let i = 0; i < parts.length - 1; i++) appendLine({ kind: "out", text: parts[i] });
+      outBuf = parts[parts.length - 1];
+    };
+    const flushErr = () => {
+      if (!errBuf) return;
+      const parts = errBuf.split("\n");
+      for (let i = 0; i < parts.length - 1; i++) appendLine({ kind: "err", text: parts[i] });
+      errBuf = parts[parts.length - 1];
+    };
+
     worker.onmessage = (e) => {
-      const { type, text, exitCode } = e.data;
-      if (type === "stdout") {
-        const trimmed = text.replace(/\n$/, "");
-        for (const line of trimmed.split("\n")) {
-          appendLine({ kind: "out", text: line });
-        }
+      const { type, text, char, exitCode } = e.data;
+      if (type === "stdout_char") {
+        outBuf += char;
+        if (char === "\n") flushOut();
+      } else if (type === "stderr_char") {
+        errBuf += char;
+        if (char === "\n") flushErr();
+      } else if (type === "stdout") {
+        outBuf += text; flushOut();
       } else if (type === "stderr") {
-        const trimmed = text.replace(/\n$/, "");
-        for (const line of trimmed.split("\n")) {
-          appendLine({ kind: "err", text: line });
-        }
+        errBuf += text; flushErr();
       } else if (type === "input_needed") {
+        if (outBuf) { appendLine({ kind: "out", text: outBuf }); outBuf = ""; }
         setWaitingInput(true);
       } else if (type === "done") {
+        if (outBuf) { appendLine({ kind: "out", text: outBuf }); outBuf = ""; }
+        if (errBuf) { appendLine({ kind: "err", text: errBuf }); errBuf = ""; }
         setRunning(false);
         setWaitingInput(false);
-        if (exitCode === 0) {
-          appendLine({ kind: "info", text: `Finished` });
-        }
+        if (exitCode === 0) appendLine({ kind: "info", text: "Finished" });
         worker.terminate();
         workerRef.current = null;
       }
@@ -163,16 +180,22 @@ export function WorkspaceClient() {
   }
 
   async function handleSubmit() {
-    const res = await fetch("/api/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, language }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setConfirmationCode(data.confirmationCode);
-      setSubmitted(true);
-      setShowModal(true);
+    try {
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, language }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setConfirmationCode(data.confirmationCode);
+        setSubmitted(true);
+        setShowModal(true);
+      } else {
+        alert(data.error ?? `Submission failed (${res.status}). Please try again.`);
+      }
+    } catch {
+      alert("Network error — please check your connection and try again.");
     }
   }
 
@@ -253,18 +276,18 @@ export function WorkspaceClient() {
 
           {/* Shell / terminal */}
           <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-            <div style={{ background: "#0d0f1a", padding: "5px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, borderBottom: "1px solid #1a1f35" }}>
-              <span style={{ fontSize: 11, color: "#475569", textTransform: "uppercase", letterSpacing: "0.07em" }}>Console</span>
-              <button onClick={handleClear} style={{ background: "none", border: "none", color: "#475569", fontSize: 11, cursor: "pointer" }}>Clear</button>
+            <div style={{ background: "#f7f8fa", padding: "5px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, borderBottom: "1px solid #e2e6ed" }}>
+              <span style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em" }}>Console</span>
+              <button onClick={handleClear} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 11, cursor: "pointer" }}>Clear</button>
             </div>
             <div
               ref={termRef}
               onClick={() => waitingInput && inputRef.current?.focus()}
-              style={{ flex: 1, overflowY: "auto", padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.8, background: "#0d0f1a", cursor: waitingInput ? "text" : "default" }}
+              style={{ flex: 1, overflowY: "auto", padding: "12px 16px", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.9, background: "#ffffff", cursor: waitingInput ? "text" : "default" }}
             >
               {lines.map((l, i) => (
                 <div key={i} style={{
-                  color: l.kind === "err" ? "#f87171" : l.kind === "info" ? "#334155" : l.kind === "input_echo" ? "#a5b4fc" : "#e2e8f0",
+                  color: l.kind === "err" ? "#dc2626" : l.kind === "info" ? "#94a3b8" : l.kind === "input_echo" ? "#2558d4" : "#162233",
                   whiteSpace: "pre-wrap", wordBreak: "break-all",
                 }}>
                   {l.text}
@@ -273,7 +296,7 @@ export function WorkspaceClient() {
 
               {/* Inline input prompt */}
               {waitingInput && (
-                <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <input
                     ref={inputRef}
                     value={inputVal}
@@ -282,16 +305,16 @@ export function WorkspaceClient() {
                     autoFocus
                     style={{
                       background: "transparent", border: "none", outline: "none",
-                      color: "#a5b4fc", fontFamily: "var(--font-mono)", fontSize: 13,
-                      flex: 1, caretColor: "#a5b4fc", padding: 0,
+                      color: "#2558d4", fontFamily: "var(--font-mono)", fontSize: 13,
+                      flex: 1, caretColor: "#2558d4", padding: 0,
                     }}
                   />
-                  <span style={{ color: "#475569", fontSize: 11, marginLeft: 8 }}>↵ Enter</span>
+                  <span style={{ color: "#94a3b8", fontSize: 11, marginLeft: 8 }}>↵ Enter</span>
                 </div>
               )}
 
               {running && !waitingInput && (
-                <span style={{ color: "#475569", animation: "blink 1s step-end infinite" }}>▋</span>
+                <span style={{ color: "#94a3b8", animation: "blink 1s step-end infinite" }}>▋</span>
               )}
             </div>
           </div>
