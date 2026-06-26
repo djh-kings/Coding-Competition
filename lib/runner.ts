@@ -92,7 +92,7 @@ export interface RunOutput {
   stdout: string; stderr: string; exitCode: number; duration: string; testResults: TestResult[];
 }
 
-export async function runWithTests(code: string, language: string, testCases: TestCase[]): Promise<RunOutput> {
+export async function runWithTests(code: string, language: string, testCases: TestCase[], customStdin = ""): Promise<RunOutput> {
   const runner = language === "javascript" ? runJavaScript : runPython;
   const start = Date.now();
   const testResults: TestResult[] = [];
@@ -103,7 +103,7 @@ export async function runWithTests(code: string, language: string, testCases: Te
     const actual = r.stdout.trim();
     testResults.push({ input: tc.input, expected: tc.expected, actual, pass: actual === tc.expected.trim() });
   }
-  if (!firstRun) firstRun = await runner(code, "");
+  if (!firstRun) firstRun = await runner(code, customStdin);
   return {
     stdout: firstRun.stdout,
     stderr: firstRun.stderr,

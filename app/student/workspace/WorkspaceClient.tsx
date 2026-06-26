@@ -15,6 +15,7 @@ export function WorkspaceClient() {
   const [code, setCode] = useState(DEFAULT_CODE);
   const [language, setLanguage] = useState("python");
   const [collapsed, setCollapsed] = useState(false);
+  const [stdin, setStdin] = useState("");
   const [runOutput, setRunOutput] = useState<RunOutput | null>(null);
   const [running, setRunning] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -59,7 +60,7 @@ export function WorkspaceClient() {
     if (!comp) return;
     setRunning(true);
     try {
-      setRunOutput(await runWithTests(code, language, []));
+      setRunOutput(await runWithTests(code, language, [], stdin));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setRunOutput({ stdout: "", stderr: msg, exitCode: 1, duration: "0", testResults: [] });
@@ -151,6 +152,18 @@ export function WorkspaceClient() {
           <CodeEditor value={code} onChange={setCode} language={language} height="280px" />
 
           {/* Action bar */}
+          {/* Stdin input */}
+          <div style={{ background: "#1a1f35", borderTop: "1px solid #0d0f1a", padding: "8px 16px" }}>
+            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", color: "#475569", marginBottom: 4 }}>Input (stdin) — one value per line</div>
+            <textarea
+              value={stdin}
+              onChange={e => setStdin(e.target.value)}
+              rows={2}
+              placeholder={"e.g.\n5\n10"}
+              style={{ width: "100%", background: "#0d0f1a", border: "1px solid #313654", borderRadius: 4, color: "#cbd5e1", fontFamily: "var(--font-mono)", fontSize: 12, padding: "6px 10px", resize: "vertical", boxSizing: "border-box" }}
+            />
+          </div>
+
           <div style={{ padding: "10px 16px", background: "#151827", borderTop: "1px solid #0d0f1a", display: "flex", gap: 8 }}>
             <button onClick={handleRun} disabled={running} style={{
               background: "#232840", border: "1px solid #313654", color: "#cbd5e1",

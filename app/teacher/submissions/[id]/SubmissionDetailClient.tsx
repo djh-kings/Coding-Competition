@@ -26,6 +26,7 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
   const [commentSaved, setCommentSaved] = useState(false);
   const [runOutput, setRunOutput] = useState<RunOutput | null>(null);
   const [running, setRunning] = useState(false);
+  const [stdin, setStdin] = useState("");
   const [confirmWinner, setConfirmWinner] = useState(false);
 
   async function patch(body: object) {
@@ -57,7 +58,7 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
   async function handleRun() {
     setRunning(true);
     try {
-      setRunOutput(await runWithTests(submission.code, submission.language, []));
+      setRunOutput(await runWithTests(submission.code, submission.language, [], stdin));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setRunOutput({ stdout: "", stderr: msg, exitCode: 1, duration: "0", testResults: [] });
@@ -103,6 +104,18 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
         {/* Left: read-only editor */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <CodeEditor value={submission.code} language={submission.language} readOnly height="400px" />
+
+          {/* Stdin input */}
+          <div style={{ background: "#1a1f35", borderTop: "1px solid #0d0f1a", padding: "8px 16px" }}>
+            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", color: "#475569", marginBottom: 4 }}>Input (stdin) — one value per line</div>
+            <textarea
+              value={stdin}
+              onChange={e => setStdin(e.target.value)}
+              rows={2}
+              placeholder={"e.g.\n5\n10"}
+              style={{ width: "100%", background: "#0d0f1a", border: "1px solid #313654", borderRadius: 4, color: "#cbd5e1", fontFamily: "var(--font-mono)", fontSize: 12, padding: "6px 10px", resize: "vertical", boxSizing: "border-box" }}
+            />
+          </div>
 
           {/* Action bar */}
           <div style={{ padding: "10px 16px", background: "#151827", borderTop: "1px solid #0d0f1a" }}>
