@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { runWithTests, preloadPython } from "@/lib/runner";
 
 const CodeEditor = dynamic(() => import("@/components/CodeEditor").then(m => ({ default: m.CodeEditor })), { ssr: false });
 
@@ -29,6 +30,7 @@ export function WorkspaceClient() {
     fetch("/api/competition/active")
       .then(r => r.json())
       .then(setComp);
+    preloadPython();
   }, []);
 
   useEffect(() => {
@@ -62,12 +64,10 @@ export function WorkspaceClient() {
     setRunning(true);
     setOutputTab("output");
     try {
-      const res = await fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, language, testCases: comp.testCases }),
-      });
-      setRunOutput(await res.json());
+      setRunOutput(await runWithTests(code, language, comp.testCases));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setRunOutput({ stdout: "", stderr: msg, exitCode: 1, duration: "0", testResults: [] });
     } finally {
       setRunning(false);
     }

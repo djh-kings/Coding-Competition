@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { runWithTests } from "@/lib/runner";
 
 const CodeEditor = dynamic(() => import("@/components/CodeEditor").then(m => ({ default: m.CodeEditor })), { ssr: false });
 
@@ -62,12 +63,10 @@ export function SubmissionDetailClient({ submission, testCases }: { submission: 
     setRunning(true);
     setOutputTab("output");
     try {
-      const res = await fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: submission.code, language: submission.language, testCases }),
-      });
-      setRunOutput(await res.json());
+      setRunOutput(await runWithTests(submission.code, submission.language, testCases));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setRunOutput({ stdout: "", stderr: msg, exitCode: 1, duration: "0", testResults: [] });
     } finally {
       setRunning(false);
     }
