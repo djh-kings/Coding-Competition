@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 
 const client = createClient({
   url: process.env.DATABASE_URL ?? "file:./dev.db",
+  authToken: process.env.DATABASE_AUTH_TOKEN,
 });
 
 async function seed() {
