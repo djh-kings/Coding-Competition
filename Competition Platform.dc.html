@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  </style>
+</helmet>
+
+<!-- ========== SECTION: PUBLIC SCREENS ========== -->
+<div style="position:absolute;left:80px;top:40px;font:600 13px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.45);letter-spacing:0.08em;text-transform:uppercase">Public Screens</div>
+
+<!-- 1. LANDING PAGE -->
+<div style="position:absolute;left:80px;top:80px;width:920px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">1 · Landing Page</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden">
+    <!-- Nav bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid #e2e6ed">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:28px;height:28px;background:#162233;border-radius:4px;display:flex;align-items:center;justify-content:center">
+          <span style="color:#fff;font:700 14px/1 'JetBrains Mono',monospace">&lt;/&gt;</span>
+        </div>
+        <span style="font:600 15px/1 system-ui,-apple-system,sans-serif;color:#162233;letter-spacing:-0.01em">KCS Code Challenge</span>
+      </div>
+      <a style="font:400 13px/1 system-ui,-apple-system,sans-serif;color:#64748b;text-decoration:none;cursor:pointer">Teacher login →</a>
+    </div>
+    <!-- Hero -->
+    <div style="padding:64px 32px 56px;text-align:center;background:linear-gradient(180deg,#f7f8fa 0%,#fff 100%)">
+      <div style="font:400 12px/1 system-ui,-apple-system,sans-serif;color:#2558d4;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px">Michaelmas Term 2026</div>
+      <h1 style="font:700 36px/1.15 system-ui,-apple-system,sans-serif;color:#162233;margin:0 0 16px;letter-spacing:-0.02em">The Fibonacci Cipher</h1>
+      <p style="font:400 15px/1.6 system-ui,-apple-system,sans-serif;color:#64748b;max-width:520px;margin:0 auto 36px">Decode the encrypted sequence using any language you choose. Accuracy and elegance of solution will both be assessed. One submission per student.</p>
+
+      <!-- Countdown -->
+      <div style="display:flex;justify-content:center;gap:24px;margin-bottom:40px">
+        <div style="text-align:center">
+          <div style="font:600 32px/1 system-ui,-apple-system,sans-serif;color:#162233">02</div>
+          <div style="font:400 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;margin-top:6px;text-transform:uppercase;letter-spacing:0.06em">Days</div>
+        </div>
+        <div style="color:#cbd5e1;font:300 28px/1 system-ui;align-self:flex-start">:</div>
+        <div style="text-align:center">
+          <div style="font:600 32px/1 system-ui,-apple-system,sans-serif;color:#162233">14</div>
+          <div style="font:400 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;margin-top:6px;text-transform:uppercase;letter-spacing:0.06em">Hours</div>
+        </div>
+        <div style="color:#cbd5e1;font:300 28px/1 system-ui;align-self:flex-start">:</div>
+        <div style="text-align:center">
+          <div style="font:600 32px/1 system-ui,-apple-system,sans-serif;color:#162233">37</div>
+          <div style="font:400 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;margin-top:6px;text-transform:uppercase;letter-spacing:0.06em">Minutes</div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:24px">
+        <button style="padding:12px 28px;background:#2558d4;color:#fff;border:none;border-radius:4px;font:500 14px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Enter competition code</button>
+        <button style="padding:12px 28px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;font:500 14px/1 system-ui,-apple-system,sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          Download rules (PDF)
+        </button>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div style="padding:16px 32px;border-top:1px solid #e2e6ed;text-align:center">
+      <span style="font:400 12px/1 system-ui,-apple-system,sans-serif;color:#94a3b8">King's College School Computer Science Department</span>
+    </div>
+  </div>
+</div>
+
+<!-- 2. STUDENT LOGIN -->
+<div style="position:absolute;left:1080px;top:80px;width:400px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">2 · Student Login</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden">
+    <div style="padding:48px 40px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:40px">
+        <div style="width:28px;height:28px;background:#162233;border-radius:4px;display:flex;align-items:center;justify-content:center">
+          <span style="color:#fff;font:700 14px/1 'JetBrains Mono',monospace">&lt;/&gt;</span>
+        </div>
+        <span style="font:600 15px/1 system-ui,-apple-system,sans-serif;color:#162233">KCS Code Challenge</span>
+      </div>
+      <h2 style="font:600 22px/1.2 system-ui,-apple-system,sans-serif;color:#162233;margin:0 0 8px">Enter your access code</h2>
+      <p style="font:400 13px/1.5 system-ui,-apple-system,sans-serif;color:#94a3b8;margin:0 0 28px">Your teacher will have given you a unique code.</p>
+      <label style="font:500 12px/1 system-ui,-apple-system,sans-serif;color:#475569;display:block;margin-bottom:8px">Access code</label>
+      <input type="text" value="KCS-2026-A7X3" style="width:100%;box-sizing:border-box;padding:11px 14px;border:1px solid #d1d5db;border-radius:4px;font:400 15px/1 'JetBrains Mono',monospace;color:#162233;letter-spacing:0.04em;outline:none" readonly="">
+      <button style="width:100%;margin-top:16px;padding:12px;background:#2558d4;color:#fff;border:none;border-radius:4px;font:500 14px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Continue</button>
+      <p style="font:400 12px/1.5 system-ui,-apple-system,sans-serif;color:#94a3b8;margin:20px 0 0;text-align:center">Can't find your code? Ask your teacher.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECTION: STUDENT ========== -->
+<div style="position:absolute;left:80px;top:560px;font:600 13px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.45);letter-spacing:0.08em;text-transform:uppercase">Student Experience</div>
+
+<!-- 3. STUDENT WORKSPACE -->
+<div style="position:absolute;left:80px;top:600px;width:1280px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">3 · Student Workspace</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden">
+    <!-- Top bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#162233">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="color:#94a3b8;font:500 13px/1 system-ui,-apple-system,sans-serif">The Fibonacci Cipher</span>
+        <span style="color:#475569;font:400 12px/1 system-ui">·</span>
+        <span style="color:#64748b;font:400 12px/1 system-ui,-apple-system,sans-serif">02:14:37 remaining</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 2s ease-in-out infinite"></div>
+        <span style="color:#64748b;font:400 12px/1 system-ui,-apple-system,sans-serif">Connected</span>
+      </div>
+    </div>
+    <!-- Split pane -->
+    <div style="display:flex;min-height:800px">
+      <!-- Left: Problem -->
+      <div style="width:380px;border-right:1px solid #e2e6ed;display:flex;flex-direction:column">
+        <div style="padding:8px 8px 8px 16px;border-bottom:1px solid #e2e6ed;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;gap:0">
+            <div style="padding:6px 14px;font:500 12px/1 system-ui,-apple-system,sans-serif;color:#2558d4;border-bottom:2px solid #2558d4;margin-bottom:-9px">Problem</div>
+            <div style="padding:6px 14px;font:400 12px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;cursor:pointer">Test Data</div>
+          </div>
+          <button title="Collapse problem panel" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:3px;cursor:pointer" style-hover="background:#f0f2f5">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+        </div>
+        <div style="padding:20px;flex:1;overflow-y:auto">
+          <h3 style="font:600 16px/1.3 system-ui,-apple-system,sans-serif;color:#162233;margin:0 0 12px">The Fibonacci Cipher</h3>
+          <p style="font:400 13px/1.7 system-ui,-apple-system,sans-serif;color:#475569;margin:0 0 16px">You are given an encrypted string where each character has been shifted by a position in the Fibonacci sequence. Write a function that decodes the message.</p>
+          <div style="background:#f7f8fa;border-radius:4px;padding:14px;margin-bottom:16px">
+            <div style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Input format</div>
+            <p style="font:400 13px/1.6 system-ui,-apple-system,sans-serif;color:#475569;margin:0">A single string <code style="background:#e8ecf1;padding:2px 6px;border-radius:3px;font:400 12px/1 'JetBrains Mono',monospace;color:#162233">s</code> of length 1 ≤ |s| ≤ 10,000 containing only printable ASCII characters.</p>
+          </div>
+          <div style="background:#f7f8fa;border-radius:4px;padding:14px;margin-bottom:16px">
+            <div style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Output format</div>
+            <p style="font:400 13px/1.6 system-ui,-apple-system,sans-serif;color:#475569;margin:0">The decoded plaintext string.</p>
+          </div>
+          <div style="background:#f7f8fa;border-radius:4px;padding:14px">
+            <div style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Example</div>
+            <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#162233">
+              <div><span style="color:#94a3b8">in: </span>"Igopt"</div>
+              <div><span style="color:#94a3b8">out:</span> "Hello"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Right: Editor + Output -->
+      <div style="flex:1;display:flex;flex-direction:column">
+        <!-- Editor header -->
+        <div style="padding:8px 16px;border-bottom:1px solid #e2e6ed;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font:400 12px/1 system-ui,-apple-system,sans-serif;color:#475569">Language:</span>
+            <select style="padding:4px 8px;border:1px solid #d1d5db;border-radius:3px;font:400 12px/1 system-ui,-apple-system,sans-serif;color:#162233;background:#fff">
+              <option>Python 3</option>
+            </select>
+          </div>
+        </div>
+        <!-- Code editor -->
+        <div style="background:#1a1d2e;padding:16px 0;overflow:auto;height:280px">
+          <div style="display:flex;font:400 13px/1.85 'JetBrains Mono',monospace">
+            <div style="width:48px;text-align:right;color:#4a5068;user-select:none;padding-right:16px;white-space:pre">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12</div>
+            <div style="color:#e2e8f0;flex:1">
+              <div><span style="color:#c792ea">def</span> <span style="color:#82aaff">decode_fib</span><span style="color:#89ddff">(</span><span style="color:#f78c6c">s</span><span style="color:#89ddff">):</span></div>
+              <div>    <span style="color:#546e7a;font-style:italic"># Generate Fibonacci shifts</span></div>
+              <div>    fib <span style="color:#89ddff">=</span> <span style="color:#89ddff">[</span><span style="color:#f78c6c">1</span><span style="color:#89ddff">,</span> <span style="color:#f78c6c">1</span><span style="color:#89ddff">]</span></div>
+              <div>    <span style="color:#c792ea">for</span> i <span style="color:#c792ea">in</span> <span style="color:#82aaff">range</span><span style="color:#89ddff">(</span><span style="color:#f78c6c">2</span><span style="color:#89ddff">,</span> <span style="color:#82aaff">len</span><span style="color:#89ddff">(</span>s<span style="color:#89ddff">)):</span></div>
+              <div>        fib<span style="color:#89ddff">.</span><span style="color:#82aaff">append</span><span style="color:#89ddff">(</span>fib<span style="color:#89ddff">[</span>i<span style="color:#89ddff">-</span><span style="color:#f78c6c">1</span><span style="color:#89ddff">]</span> <span style="color:#89ddff">+</span> fib<span style="color:#89ddff">[</span>i<span style="color:#89ddff">-</span><span style="color:#f78c6c">2</span><span style="color:#89ddff">])</span></div>
+              <div>    result <span style="color:#89ddff">=</span> <span style="color:#c3e88d">""</span></div>
+              <div>    <span style="color:#c792ea">for</span> i<span style="color:#89ddff">,</span> c <span style="color:#c792ea">in</span> <span style="color:#82aaff">enumerate</span><span style="color:#89ddff">(</span>s<span style="color:#89ddff">):</span></div>
+              <div>        shifted <span style="color:#89ddff">=</span> <span style="color:#82aaff">chr</span><span style="color:#89ddff">(</span><span style="color:#82aaff">ord</span><span style="color:#89ddff">(</span>c<span style="color:#89ddff">)</span> <span style="color:#89ddff">-</span> fib<span style="color:#89ddff">[</span>i<span style="color:#89ddff">])</span></div>
+              <div>        result <span style="color:#89ddff">+=</span> shifted</div>
+              <div>    <span style="color:#c792ea">return</span> result</div>
+              <div></div>
+              <div><span style="color:#82aaff">print</span><span style="color:#89ddff">(</span><span style="color:#82aaff">decode_fib</span><span style="color:#89ddff">(</span><span style="color:#82aaff">input</span><span style="color:#89ddff">()))</span><span style="color:#636c83">│</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Action buttons -->
+        <div style="padding:10px 16px;border-top:1px solid #2a2d3e;background:#1a1d2e;display:flex;gap:10px">
+          <button style="padding:8px 20px;background:#2a3a4f;color:#e2e8f0;border:1px solid #3a4a5f;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1l8 5-8 5V1z" fill="#e2e8f0"></path></svg>
+            Run
+          </button>
+          <button style="padding:8px 20px;background:#2558d4;color:#fff;border:none;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Submit</button>
+        </div>
+        <!-- Output panel (large, terminal-style) -->
+        <div style="border-top:1px solid #e2e6ed;background:#fff;flex:1;display:flex;flex-direction:column;min-height:420px">
+          <!-- Tabs + status -->
+          <div style="padding:0 16px;border-bottom:1px solid #e2e6ed;display:flex;align-items:center;gap:0;background:#f7f8fa">
+            <div style="padding:11px 4px 9px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:#162233;text-transform:uppercase;letter-spacing:0.07em;border-bottom:2px solid #2558d4;margin-right:24px">Output</div>
+            <div style="padding:11px 4px 9px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.07em;cursor:pointer;display:flex;align-items:center;gap:8px">
+              Test cases
+              <span style="font:500 10px/1 'JetBrains Mono',monospace;color:#16a34a;background:#f0fdf4;padding:3px 6px;border-radius:8px;letter-spacing:0">2/3</span>
+            </div>
+            <div style="flex:1"></div>
+            <span style="font:400 11px/1 system-ui,-apple-system,sans-serif;color:#16a34a;display:flex;align-items:center;gap:6px">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              Exit 0 · 0.04s · 6.2 MB
+            </span>
+            <div style="width:1px;background:#e2e6ed;height:14px;margin:0 14px"></div>
+            <button title="Clear" style="background:none;border:none;cursor:pointer;color:#64748b;font:400 12px/1 system-ui,-apple-system,sans-serif">Clear</button>
+            <div style="width:14px"></div>
+            <button title="Wrap lines" style="background:none;border:none;cursor:pointer;color:#64748b;font:400 12px/1 system-ui,-apple-system,sans-serif">Wrap</button>
+          </div>
+          <!-- Big terminal area -->
+          <div style="flex:1;padding:14px 18px;font:400 13px/1.7 'JetBrains Mono',monospace;color:#162233;overflow:auto">
+            <div style="color:#94a3b8;margin-bottom:6px">$ python3 solution.py &lt; tests/case-1.txt</div>
+            <div><span style="color:#94a3b8">[init]</span> Reading input from stdin…</div>
+            <div><span style="color:#94a3b8">[debug]</span> Input length: 5 characters</div>
+            <div><span style="color:#94a3b8">[debug]</span> Fibonacci shifts: [1, 1, 2, 3, 5]</div>
+            <div><span style="color:#94a3b8">[debug]</span> char 'I' (73) → 'H' (72), shift=1</div>
+            <div><span style="color:#94a3b8">[debug]</span> char 'g' (103) → 'e' (101), shift=2</div>
+            <div><span style="color:#94a3b8">[debug]</span> char 'o' (111) → 'l' (108), shift=3</div>
+            <div><span style="color:#94a3b8">[debug]</span> char 'p' (112) → 'l' (108), shift=4</div>
+            <div><span style="color:#94a3b8">[debug]</span> char 't' (116) → 'o' (111), shift=5</div>
+            <div></div>
+            <div style="color:#162233">Hello</div>
+            <div></div>
+            <div style="color:#94a3b8">$ python3 solution.py &lt; tests/case-2.txt</div>
+            <div style="color:#162233">Hello, World!</div>
+            <div></div>
+            <div style="color:#94a3b8">$ python3 solution.py &lt; tests/case-3.txt</div>
+            <div style="color:#dc2626">AssertionError: expected "King's College" got "King's College"</div>
+            <div style="color:#94a3b8">  at line 9 in decode_fib (off-by-one on shift index)</div>
+            <div></div>
+            <div style="color:#94a3b8">─ Process finished. 2 of 3 cases passed.</div>
+            <div><span style="color:#94a3b8">$ </span><span style="background:#162233;color:#162233;width:8px;height:14px;display:inline-block;vertical-align:middle">▌</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3c. COLLAPSED PROBLEM PANEL STATE -->
+<div style="position:absolute;left:1400px;top:600px;width:480px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">3c · Problem panel collapsed</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#162233">
+      <span style="color:#94a3b8;font:500 13px/1 system-ui,-apple-system,sans-serif">The Fibonacci Cipher</span>
+      <span style="color:#64748b;font:400 12px/1 system-ui,-apple-system,sans-serif">02:14:37 remaining</span>
+    </div>
+    <div style="display:flex">
+      <!-- Collapsed rail -->
+      <div style="width:40px;border-right:1px solid #e2e6ed;background:#f7f8fa;display:flex;flex-direction:column;align-items:center;padding-top:14px;gap:14px">
+        <button title="Expand problem panel" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e2e6ed;border-radius:3px;cursor:pointer">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+        <div style="writing-mode:vertical-rl;transform:rotate(180deg);font:500 11px/1 system-ui,-apple-system,sans-serif;color:#64748b;letter-spacing:0.08em;text-transform:uppercase;margin-top:6px">Problem</div>
+      </div>
+      <!-- Editor area takes full width -->
+      <div style="flex:1;background:#1a1d2e;padding:16px 0;min-height:240px">
+        <div style="display:flex;font:400 13px/1.85 'JetBrains Mono',monospace">
+          <div style="width:48px;text-align:right;color:#4a5068;user-select:none;padding-right:16px;white-space:pre">1
+2
+3
+4
+5
+6
+7</div>
+          <div style="color:#e2e8f0;flex:1">
+            <div><span style="color:#c792ea">def</span> <span style="color:#82aaff">decode_fib</span><span style="color:#89ddff">(</span><span style="color:#f78c6c">s</span><span style="color:#89ddff">):</span></div>
+            <div>    fib <span style="color:#89ddff">=</span> <span style="color:#89ddff">[</span><span style="color:#f78c6c">1</span><span style="color:#89ddff">,</span> <span style="color:#f78c6c">1</span><span style="color:#89ddff">]</span></div>
+            <div>    <span style="color:#c792ea">for</span> i <span style="color:#c792ea">in</span> <span style="color:#82aaff">range</span><span style="color:#89ddff">(</span><span style="color:#f78c6c">2</span><span style="color:#89ddff">,</span> <span style="color:#82aaff">len</span><span style="color:#89ddff">(</span>s<span style="color:#89ddff">)):</span></div>
+            <div>        fib<span style="color:#89ddff">.</span><span style="color:#82aaff">append</span><span style="color:#89ddff">(</span>fib<span style="color:#89ddff">[</span>i<span style="color:#89ddff">-</span><span style="color:#f78c6c">1</span><span style="color:#89ddff">]</span><span style="color:#89ddff">+</span>fib<span style="color:#89ddff">[</span>i<span style="color:#89ddff">-</span><span style="color:#f78c6c">2</span><span style="color:#89ddff">])</span></div>
+            <div>    <span style="color:#c792ea">return</span> <span style="color:#c3e88d">""</span><span style="color:#89ddff">.</span>join<span style="color:#89ddff">(</span><span style="color:#82aaff">chr</span><span style="color:#89ddff">(</span><span style="color:#82aaff">ord</span><span style="color:#89ddff">(</span>c<span style="color:#89ddff">)-</span>fib<span style="color:#89ddff">[</span>i<span style="color:#89ddff">])</span></div>
+            <div>        <span style="color:#c792ea">for</span> i<span style="color:#89ddff">,</span>c <span style="color:#c792ea">in</span> <span style="color:#82aaff">enumerate</span><span style="color:#89ddff">(</span>s<span style="color:#89ddff">))</span></div>
+            <div><span style="color:#82aaff">print</span><span style="color:#89ddff">(</span><span style="color:#82aaff">decode_fib</span><span style="color:#89ddff">(</span><span style="color:#82aaff">input</span><span style="color:#89ddff">()))</span><span style="color:#636c83">│</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:8px 16px;background:#151827;border-top:1px solid #0d0f1a;font:400 11px/1 system-ui,-apple-system,sans-serif;color:#64748b">More room for code. Click ▸ to expand the problem.</div>
+  </div>
+</div>
+
+<!-- 3b. SUBMISSION MODAL -->
+<div style="position:absolute;left:1400px;top:1020px;width:400px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">3b · Submission Confirmation Modal</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 4px 24px rgba(0,0,0,.15);overflow:hidden;border:1px solid #e2e6ed">
+    <div style="padding:32px">
+      <div style="width:40px;height:40px;background:#ecfdf5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10l3 3 7-7" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </div>
+      <h3 style="font:600 18px/1.3 system-ui,-apple-system,sans-serif;color:#162233;margin:0 0 8px">Submission received</h3>
+      <p style="font:400 13px/1.6 system-ui,-apple-system,sans-serif;color:#64748b;margin:0 0 24px">Your solution has been submitted. Save your confirmation code — you will need it as proof of submission.</p>
+      <label style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">Confirmation code</label>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;padding:11px 14px;background:#f7f8fa;border:1px solid #e2e6ed;border-radius:4px;font:500 15px/1 'JetBrains Mono',monospace;color:#162233;letter-spacing:0.04em">FIB-7A3X-KCS</div>
+        <button style="padding:10px 16px;background:#162233;color:#fff;border:none;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="5" y="5" width="8" height="8" rx="1.5" stroke="#fff" stroke-width="1.3"></rect><path d="M3 9V2.5A1.5 1.5 0 0 1 4.5 1H9" stroke="#fff" stroke-width="1.3" stroke-linecap="round"></path></svg>
+          Copy
+        </button>
+      </div>
+      <p style="font:400 12px/1.5 system-ui,-apple-system,sans-serif;color:#94a3b8;margin:16px 0 0">Submitted 26 Jun 2026 at 14:23. You cannot resubmit.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECTION: TEACHER ========== -->
+<div style="position:absolute;left:80px;top:1520px;font:600 13px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.45);letter-spacing:0.08em;text-transform:uppercase">Teacher Dashboard</div>
+
+<!-- 4. TEACHER DASHBOARD -->
+<div style="position:absolute;left:80px;top:1560px;width:1100px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">4 · Teacher — Submission List</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden">
+    <!-- Top bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #e2e6ed">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:28px;height:28px;background:#162233;border-radius:4px;display:flex;align-items:center;justify-content:center">
+          <span style="color:#fff;font:700 14px/1 'JetBrains Mono',monospace">&lt;/&gt;</span>
+        </div>
+        <span style="font:600 15px/1 system-ui,-apple-system,sans-serif;color:#162233">The Fibonacci Cipher</span>
+        <span style="padding:3px 10px;background:#ecfdf5;color:#16a34a;font:500 11px/1 system-ui,-apple-system,sans-serif;border-radius:10px">Active</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button style="padding:8px 16px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;font:400 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer">+ New competition</button>
+        <button style="padding:8px 16px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;font:400 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Sign out</button>
+      </div>
+    </div>
+    <!-- Stats bar -->
+    <div style="display:flex;gap:0;border-bottom:1px solid #e2e6ed">
+      <div style="flex:1;padding:16px 24px;border-right:1px solid #e2e6ed">
+        <div style="font:400 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Submissions</div>
+        <div style="font:600 22px/1 system-ui,-apple-system,sans-serif;color:#162233">17 <span style="font:400 13px/1 system-ui;color:#94a3b8">/ 24 codes issued</span></div>
+      </div>
+      <div style="flex:1;padding:16px 24px;border-right:1px solid #e2e6ed">
+        <div style="font:400 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Shortlisted</div>
+        <div style="font:600 22px/1 system-ui,-apple-system,sans-serif;color:#162233">4</div>
+      </div>
+      <div style="flex:1;padding:16px 24px">
+        <div style="font:400 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Deadline</div>
+        <div style="font:600 14px/1.4 system-ui,-apple-system,sans-serif;color:#162233">28 Jun 2026, 17:00</div>
+      </div>
+    </div>
+    <!-- Filter bar -->
+    <div style="padding:12px 24px;border-bottom:1px solid #e2e6ed;display:flex;align-items:center;gap:16px">
+      <span style="font:500 13px/1 system-ui,-apple-system,sans-serif;color:#2558d4;cursor:pointer;padding-bottom:2px;border-bottom:2px solid #2558d4">All (17)</span>
+      <span style="font:400 13px/1 system-ui,-apple-system,sans-serif;color:#64748b;cursor:pointer">Shortlisted (4)</span>
+      <span style="font:400 13px/1 system-ui,-apple-system,sans-serif;color:#64748b;cursor:pointer">Winner (0)</span>
+      <div style="flex:1"></div>
+      <span style="font:400 12px/1 system-ui,-apple-system,sans-serif;color:#94a3b8">Sort: newest first ↓</span>
+    </div>
+    <!-- Table -->
+    <div>
+      <!-- Header -->
+      <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 100px 100px;padding:10px 24px;border-bottom:1px solid #e2e6ed;background:#f7f8fa">
+        <div style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Student</div>
+        <div style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Submitted</div>
+        <div style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Code</div>
+        <div style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Shortlisted</div>
+        <div style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Winner</div>
+      </div>
+      <!-- Row 1 - shortlisted -->
+      <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 100px 100px;padding:12px 24px;border-bottom:1px solid #f0f2f5;cursor:pointer;background:#fefce8" style-hover="background:#f7f8fa">
+        <div style="font:500 13px/1.4 system-ui,-apple-system,sans-serif;color:#162233">Ayesha Patel</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#64748b">26 Jun, 09:14</div>
+        <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#64748b">FIB-9K2L-KCS</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#d97706">★ Yes</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">—</div>
+      </div>
+      <!-- Row 2 -->
+      <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 100px 100px;padding:12px 24px;border-bottom:1px solid #f0f2f5;cursor:pointer" style-hover="background:#f7f8fa">
+        <div style="font:500 13px/1.4 system-ui,-apple-system,sans-serif;color:#162233">Marcus Chen</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#64748b">26 Jun, 10:32</div>
+        <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#64748b">FIB-3M8N-KCS</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">No</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">—</div>
+      </div>
+      <!-- Row 3 - shortlisted -->
+      <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 100px 100px;padding:12px 24px;border-bottom:1px solid #f0f2f5;cursor:pointer;background:#fefce8" style-hover="background:#f7f8fa">
+        <div style="font:500 13px/1.4 system-ui,-apple-system,sans-serif;color:#162233">Olivia Thompson</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#64748b">25 Jun, 16:48</div>
+        <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#64748b">FIB-5P1Q-KCS</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#d97706">★ Yes</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">—</div>
+      </div>
+      <!-- Row 4 -->
+      <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 100px 100px;padding:12px 24px;border-bottom:1px solid #f0f2f5;cursor:pointer" style-hover="background:#f7f8fa">
+        <div style="font:500 13px/1.4 system-ui,-apple-system,sans-serif;color:#162233">James Wright</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#64748b">25 Jun, 15:22</div>
+        <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#64748b">FIB-7A3X-KCS</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">No</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">—</div>
+      </div>
+      <!-- Row 5 - shortlisted -->
+      <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 100px 100px;padding:12px 24px;border-bottom:1px solid #f0f2f5;cursor:pointer;background:#fefce8" style-hover="background:#f7f8fa">
+        <div style="font:500 13px/1.4 system-ui,-apple-system,sans-serif;color:#162233">Ravi Krishnamurthy</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#64748b">25 Jun, 14:05</div>
+        <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#64748b">FIB-2D6F-KCS</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#d97706">★ Yes</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">—</div>
+      </div>
+      <!-- Row 6 -->
+      <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 100px 100px;padding:12px 24px;cursor:pointer" style-hover="background:#f7f8fa">
+        <div style="font:500 13px/1.4 system-ui,-apple-system,sans-serif;color:#162233">Sophie Laurent</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#64748b">25 Jun, 11:50</div>
+        <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#64748b">FIB-8H4J-KCS</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">No</div>
+        <div style="font:400 13px/1.4 system-ui,-apple-system,sans-serif;color:#94a3b8">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. TEACHER SUBMISSION DETAIL -->
+<div style="position:absolute;left:80px;top:2200px;width:1100px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">5 · Teacher — Submission Detail</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden">
+    <!-- Header -->
+    <div style="padding:16px 24px;border-bottom:1px solid #e2e6ed;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:16px">
+        <a style="font:400 13px/1 system-ui,-apple-system,sans-serif;color:#64748b;cursor:pointer;text-decoration:none">← Back to list</a>
+        <span style="color:#d1d5db">|</span>
+        <span style="font:600 15px/1 system-ui,-apple-system,sans-serif;color:#162233">Ayesha Patel</span>
+        <span style="font:400 12px/1 'JetBrains Mono',monospace;color:#94a3b8">FIB-9K2L-KCS</span>
+        <span style="font:400 12px/1 system-ui,-apple-system,sans-serif;color:#94a3b8">Submitted 26 Jun, 09:14</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#fefce8;border:1px solid #fde68a;border-radius:4px;cursor:pointer">
+          <span style="color:#d97706;font-size:13px">★</span>
+          <span style="font:500 13px/1 system-ui,-apple-system,sans-serif;color:#92400e">Shortlisted</span>
+        </div>
+        <button style="padding:8px 18px;background:#162233;color:#fff;border:none;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Mark as winner</button>
+      </div>
+    </div>
+    <!-- Split: code + sidebar -->
+    <div style="display:flex">
+      <!-- Code view -->
+      <div style="flex:1;display:flex;flex-direction:column">
+        <div style="flex:1;background:#1a1d2e;padding:16px 0;min-height:300px">
+          <div style="display:flex;font:400 13px/1.85 'JetBrains Mono',monospace">
+            <div style="width:48px;text-align:right;color:#4a5068;user-select:none;padding-right:16px;white-space:pre">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14</div>
+            <div style="color:#e2e8f0;flex:1">
+              <div><span style="color:#c792ea">def</span> <span style="color:#82aaff">decode_fib</span><span style="color:#89ddff">(</span><span style="color:#f78c6c">s</span><span style="color:#89ddff">):</span></div>
+              <div>    <span style="color:#546e7a;font-style:italic"># Elegant recursive approach</span></div>
+              <div>    <span style="color:#c792ea">def</span> <span style="color:#82aaff">fib_gen</span><span style="color:#89ddff">():</span></div>
+              <div>        a<span style="color:#89ddff">,</span> b <span style="color:#89ddff">=</span> <span style="color:#f78c6c">1</span><span style="color:#89ddff">,</span> <span style="color:#f78c6c">1</span></div>
+              <div>        <span style="color:#c792ea">while</span> <span style="color:#ff5370">True</span><span style="color:#89ddff">:</span></div>
+              <div>            <span style="color:#c792ea">yield</span> a</div>
+              <div>            a<span style="color:#89ddff">,</span> b <span style="color:#89ddff">=</span> b<span style="color:#89ddff">,</span> a <span style="color:#89ddff">+</span> b</div>
+              <div></div>
+              <div>    shifts <span style="color:#89ddff">=</span> fib_gen<span style="color:#89ddff">()</span></div>
+              <div>    <span style="color:#c792ea">return</span> <span style="color:#c3e88d">""</span><span style="color:#89ddff">.</span>join<span style="color:#89ddff">(</span></div>
+              <div>        <span style="color:#82aaff">chr</span><span style="color:#89ddff">(</span><span style="color:#82aaff">ord</span><span style="color:#89ddff">(</span>c<span style="color:#89ddff">)</span> <span style="color:#89ddff">-</span> <span style="color:#82aaff">next</span><span style="color:#89ddff">(</span>shifts<span style="color:#89ddff">))</span></div>
+              <div>        <span style="color:#c792ea">for</span> c <span style="color:#c792ea">in</span> s</div>
+              <div>    <span style="color:#89ddff">)</span></div>
+              <div><span style="color:#82aaff">print</span><span style="color:#89ddff">(</span><span style="color:#82aaff">decode_fib</span><span style="color:#89ddff">(</span><span style="color:#82aaff">input</span><span style="color:#89ddff">()))</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Run button + output -->
+        <div style="padding:10px 16px;border-top:1px solid #2a2d3e;background:#1a1d2e;display:flex;gap:10px">
+          <button style="padding:8px 20px;background:#2a3a4f;color:#e2e8f0;border:1px solid #3a4a5f;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1l8 5-8 5V1z" fill="#e2e8f0"></path></svg>
+            Run
+          </button>
+        </div>
+        <div style="border-top:1px solid #e2e6ed;background:#f7f8fa">
+          <div style="padding:8px 16px;border-bottom:1px solid #e2e6ed">
+            <span style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em">Output</span>
+          </div>
+          <div style="padding:14px 16px;font:400 13px/1.6 'JetBrains Mono',monospace;color:#162233">Hello</div>
+        </div>
+      </div>
+      <!-- Sidebar -->
+      <div style="width:320px;border-left:1px solid #e2e6ed;display:flex;flex-direction:column">
+        <div style="padding:20px">
+          <label style="font:500 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px">Teacher comment</label>
+          <textarea style="width:100%;box-sizing:border-box;height:120px;padding:10px 12px;border:1px solid #d1d5db;border-radius:4px;font:400 13px/1.5 system-ui,-apple-system,sans-serif;color:#162233;resize:vertical" placeholder="Add notes about this submission…">Excellent use of generators. Clean, Pythonic solution. One of the strongest entries.</textarea>
+          <button style="margin-top:10px;padding:8px 16px;background:#2558d4;color:#fff;border:none;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Save comment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5b. WINNER CONFIRMATION MODAL -->
+<div style="position:absolute;left:1260px;top:2200px;width:380px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">5b · Winner Confirmation Dialog</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 4px 24px rgba(0,0,0,.15);border:1px solid #e2e6ed;padding:28px">
+    <h3 style="font:600 17px/1.3 system-ui,-apple-system,sans-serif;color:#162233;margin:0 0 8px">Confirm winner</h3>
+    <p style="font:400 13px/1.6 system-ui,-apple-system,sans-serif;color:#64748b;margin:0 0 24px">Mark <strong style="color:#162233">Ayesha Patel</strong> as the winner of The Fibonacci Cipher? This action can be undone.</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button style="padding:8px 18px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Cancel</button>
+      <button style="padding:8px 18px;background:#162233;color:#fff;border:none;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Confirm winner</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECTION: TEACHER ADMIN ========== -->
+<div style="position:absolute;left:80px;top:2800px;font:600 13px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.45);letter-spacing:0.08em;text-transform:uppercase">Teacher Admin</div>
+
+<!-- 6. CREATE COMPETITION -->
+<div style="position:absolute;left:80px;top:2840px;width:680px">
+  <div data-drags-parent="1" style="position:absolute;top:-24px;font:500 11px/1 system-ui,-apple-system,sans-serif;color:rgba(22,34,51,.55)">6 · Teacher — Create Competition</div>
+  <div style="background:#fff;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden">
+    <!-- Header -->
+    <div style="padding:16px 24px;border-bottom:1px solid #e2e6ed;display:flex;align-items:center;gap:12px">
+      <a style="font:400 13px/1 system-ui,-apple-system,sans-serif;color:#64748b;cursor:pointer;text-decoration:none">← Dashboard</a>
+      <span style="color:#d1d5db">|</span>
+      <span style="font:600 15px/1 system-ui,-apple-system,sans-serif;color:#162233">New competition</span>
+    </div>
+    <div style="padding:28px 24px">
+      <!-- Name -->
+      <div style="margin-bottom:24px">
+        <label style="font:500 12px/1 system-ui,-apple-system,sans-serif;color:#475569;display:block;margin-bottom:8px">Competition name</label>
+        <input type="text" placeholder="e.g. The Fibonacci Cipher" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid #d1d5db;border-radius:4px;font:400 14px/1 system-ui,-apple-system,sans-serif;color:#162233" readonly="">
+      </div>
+      <!-- Deadline -->
+      <div style="margin-bottom:24px">
+        <label style="font:500 12px/1 system-ui,-apple-system,sans-serif;color:#475569;display:block;margin-bottom:8px">Deadline</label>
+        <div style="display:flex;gap:10px">
+          <input type="date" value="2026-06-28" style="flex:1;padding:10px 14px;border:1px solid #d1d5db;border-radius:4px;font:400 14px/1 system-ui,-apple-system,sans-serif;color:#162233" readonly="">
+          <input type="time" value="17:00" style="width:140px;padding:10px 14px;border:1px solid #d1d5db;border-radius:4px;font:400 14px/1 system-ui,-apple-system,sans-serif;color:#162233" readonly="">
+        </div>
+      </div>
+      <!-- Problem statement -->
+      <div style="margin-bottom:24px">
+        <label style="font:500 12px/1 system-ui,-apple-system,sans-serif;color:#475569;display:block;margin-bottom:8px">Problem statement</label>
+        <div style="border:1px solid #d1d5db;border-radius:4px;overflow:hidden">
+          <!-- Toolbar -->
+          <div style="padding:6px 10px;background:#f7f8fa;border-bottom:1px solid #e2e6ed;display:flex;gap:4px">
+            <button style="padding:4px 8px;background:none;border:1px solid transparent;border-radius:3px;font:700 13px/1 system-ui;color:#475569;cursor:pointer">B</button>
+            <button style="padding:4px 8px;background:none;border:1px solid transparent;border-radius:3px;font:italic 13px/1 system-ui;color:#475569;cursor:pointer">I</button>
+            <button style="padding:4px 8px;background:none;border:1px solid transparent;border-radius:3px;font:400 12px/1 'JetBrains Mono',monospace;color:#475569;cursor:pointer">&lt;&gt;</button>
+            <div style="width:1px;background:#e2e6ed;margin:2px 4px"></div>
+            <button style="padding:4px 8px;background:none;border:1px solid transparent;border-radius:3px;font:400 13px/1 system-ui;color:#475569;cursor:pointer">H1</button>
+            <button style="padding:4px 8px;background:none;border:1px solid transparent;border-radius:3px;font:400 13px/1 system-ui;color:#475569;cursor:pointer">H2</button>
+            <button style="padding:4px 8px;background:none;border:1px solid transparent;border-radius:3px;font:400 13px/1 system-ui;color:#475569;cursor:pointer">• List</button>
+          </div>
+          <div style="padding:14px;min-height:140px;font:400 14px/1.6 system-ui,-apple-system,sans-serif;color:#94a3b8">Write the problem statement here. Supports Markdown formatting…</div>
+        </div>
+      </div>
+      <!-- PDF upload -->
+      <div style="margin-bottom:24px">
+        <label style="font:500 12px/1 system-ui,-apple-system,sans-serif;color:#475569;display:block;margin-bottom:8px">Rules document (PDF)</label>
+        <div style="padding:24px;border:2px dashed #d1d5db;border-radius:4px;text-align:center;cursor:pointer">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="margin:0 auto 8px;display:block"><path d="M12 5v10M8 9l4-4 4 4" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 15v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <div style="font:400 13px/1 system-ui,-apple-system,sans-serif;color:#64748b">Click to upload or drag and drop</div>
+          <div style="font:400 11px/1 system-ui,-apple-system,sans-serif;color:#94a3b8;margin-top:6px">PDF, max 10MB</div>
+        </div>
+      </div>
+      <!-- Access codes -->
+      <div style="margin-bottom:28px">
+        <label style="font:500 12px/1 system-ui,-apple-system,sans-serif;color:#475569;display:block;margin-bottom:8px">Student access codes</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="font:400 13px/1 system-ui,-apple-system,sans-serif;color:#475569">Generate</span>
+          <input type="number" value="24" style="width:72px;padding:10px 14px;border:1px solid #d1d5db;border-radius:4px;font:400 14px/1 system-ui,-apple-system,sans-serif;color:#162233;text-align:center" readonly="">
+          <span style="font:400 13px/1 system-ui,-apple-system,sans-serif;color:#475569">unique codes</span>
+        </div>
+        <p style="font:400 12px/1.5 system-ui,-apple-system,sans-serif;color:#94a3b8;margin:8px 0 0">Codes are generated on publish. You can download them as a CSV.</p>
+      </div>
+      <!-- Buttons -->
+      <div style="display:flex;gap:10px;border-top:1px solid #e2e6ed;padding-top:20px">
+        <button style="padding:10px 20px;background:#f7f8fa;color:#475569;border:1px solid #d1d5db;border-radius:4px;font:500 13px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Preview</button>
+        <button style="padding:10px 24px;background:#2558d4;color:#fff;border:none;border-radius:4px;font:500 14px/1 system-ui,-apple-system,sans-serif;cursor:pointer">Publish competition</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>
