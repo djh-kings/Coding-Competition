@@ -32,11 +32,16 @@ async function runCode(code: string, language: string, stdin: string): Promise<P
     }),
   });
   const text = await res.text();
+  let parsed: { run?: { stdout?: string; stderr?: string; code?: number }; message?: string } = {};
   try {
-    return JSON.parse(text);
+    parsed = JSON.parse(text);
   } catch {
     return { run: { stdout: "", stderr: `Execution service error (${res.status}): ${text.slice(0, 200)}`, code: 1 } };
   }
+  if (!parsed.run) {
+    return { run: { stdout: "", stderr: `Execution service error (${res.status}): ${parsed.message ?? text.slice(0, 200)}`, code: 1 } };
+  }
+  return { run: { stdout: parsed.run.stdout ?? "", stderr: parsed.run.stderr ?? "", code: parsed.run.code ?? 0 } };
 }
 
 export const maxDuration = 60;
