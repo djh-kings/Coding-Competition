@@ -62,7 +62,7 @@ export function WorkspaceClient() {
   async function handleRun() {
     if (!comp) return;
     setRunning(true);
-    setOutputTab("output");
+    setOutputTab(comp.testCases?.length ? "testcases" : "output");
     try {
       setRunOutput(await runWithTests(code, language, comp.testCases));
     } catch (e) {
