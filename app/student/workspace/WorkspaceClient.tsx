@@ -314,21 +314,27 @@ export function WorkspaceClient() {
 
       {/* Submitted modal */}
       {submitted && showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
           <div style={{ background: "#fff", borderRadius: 4, padding: 36, maxWidth: 480, width: "90%", boxShadow: "0 4px 24px rgba(0,0,0,.15)" }}>
             <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 11l4 4 8-8" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
-            <h2 style={{ fontSize: 19, fontWeight: 600, color: "#162233", marginBottom: 8 }}>Submission received</h2>
-            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>Keep this confirmation code safe.</p>
-            <p style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em", marginBottom: 8 }}>Confirmation code</p>
-            <div style={{ display: "flex", borderRadius: 4, overflow: "hidden", border: "1px solid #e2e6ed", marginBottom: 16 }}>
-              <span style={{ flex: 1, padding: "12px 14px", fontFamily: "var(--font-mono)", fontSize: 16, fontWeight: 500, color: "#162233", background: "#f7f8fa" }}>{confirmationCode}</span>
-              <button onClick={() => navigator.clipboard.writeText(confirmationCode ?? "")} style={{ background: "#162233", color: "#fff", border: "none", padding: "0 14px", cursor: "pointer" }}>
+            <h2 style={{ fontSize: 19, fontWeight: 600, color: "#162233", marginBottom: 8 }}>Submission received!</h2>
+            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>
+              Write down your confirmation code — you will need it to claim your prize if you win.
+            </p>
+            <p style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em", marginBottom: 8 }}>Your confirmation code</p>
+            <div style={{ display: "flex", borderRadius: 4, overflow: "hidden", border: "2px solid #2558d4", marginBottom: 24 }}>
+              <span style={{ flex: 1, padding: "14px 16px", fontFamily: "var(--font-mono)", fontSize: 22, fontWeight: 700, color: "#162233", background: "#f7f8fa", letterSpacing: "0.1em" }}>{confirmationCode}</span>
+              <button onClick={() => navigator.clipboard.writeText(confirmationCode ?? "")} title="Copy" style={{ background: "#162233", color: "#fff", border: "none", padding: "0 16px", cursor: "pointer" }}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="8" height="9" rx="1" stroke="white" strokeWidth="1.2"/><path d="M4 4V3a1 1 0 011-1h6a1 1 0 011 1v7a1 1 0 01-1 1h-1" stroke="white" strokeWidth="1.2"/></svg>
               </button>
             </div>
-            <p style={{ fontSize: 12, color: "#94a3b8" }}>Submitted {new Date().toLocaleDateString()}. You cannot resubmit.</p>
+            <form action="/api/student/logout" method="POST">
+              <button type="submit" style={{ width: "100%", background: "#2558d4", color: "#fff", border: "none", fontSize: 15, fontWeight: 600, padding: "12px", borderRadius: 4, cursor: "pointer" }}>
+                OK — I have noted my code
+              </button>
+            </form>
           </div>
         </div>
       )}
