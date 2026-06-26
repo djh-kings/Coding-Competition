@@ -353,11 +353,15 @@ export function WorkspaceClient() {
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="8" height="9" rx="1" stroke="white" strokeWidth="1.2"/><path d="M4 4V3a1 1 0 011-1h6a1 1 0 011 1v7a1 1 0 01-1 1h-1" stroke="white" strokeWidth="1.2"/></svg>
               </button>
             </div>
-            <form action="/api/student/logout" method="POST">
-              <button type="submit" style={{ width: "100%", background: "#2558d4", color: "#fff", border: "none", fontSize: 15, fontWeight: 600, padding: "12px", borderRadius: 4, cursor: "pointer" }}>
-                OK — I have noted my code
-              </button>
-            </form>
+            <button
+              onClick={async () => {
+                await fetch("/api/student/logout", { method: "POST" });
+                window.location.href = "/";
+              }}
+              style={{ width: "100%", background: "#2558d4", color: "#fff", border: "none", fontSize: 15, fontWeight: 600, padding: "12px", borderRadius: 4, cursor: "pointer" }}
+            >
+              OK — I have noted my code
+            </button>
           </div>
         </div>
       )}
