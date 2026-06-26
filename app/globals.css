@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+:root {
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  background: #ffffff;
+  color: #162233;
+}
