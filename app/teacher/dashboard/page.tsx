@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getTeacherSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { submissions, competitions } from "@/db/schema";
+import { submissions, competitions, accessCodes } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
 
@@ -15,6 +15,10 @@ export default async function DashboardPage() {
 
   const rows = activeComp
     ? await db.select().from(submissions).where(eq(submissions.competitionId, activeComp.id)).orderBy(submissions.submittedAt)
+    : [];
+
+  const codes = activeComp
+    ? await db.select().from(accessCodes).where(eq(accessCodes.competitionId, activeComp.id))
     : [];
 
   const shortlisted = rows.filter(r => r.shortlisted);
@@ -90,6 +94,30 @@ export default async function DashboardPage() {
           ))
         )}
       </div>
+
+      {/* Access codes */}
+      {codes.length > 0 && (
+        <div style={{ margin: "0 24px 24px", background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 1px 4px rgba(0,0,0,.08)", padding: "20px 24px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em" }}>
+              Access Codes — {codes.filter(c => !c.usedAt).length} unused / {codes.length} total
+            </span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
+            {codes.map(c => (
+              <div key={c.id} style={{
+                padding: "7px 10px", borderRadius: 3, textAlign: "center",
+                background: c.usedAt ? "#f0fdf4" : "#f7f8fa",
+                border: `1px solid ${c.usedAt ? "#bbf7d0" : "#e2e6ed"}`,
+                fontFamily: "var(--font-mono)", fontSize: 13, color: c.usedAt ? "#15803d" : "#162233",
+              }}>
+                {c.code}
+                {c.usedAt && <div style={{ fontSize: 10, color: "#16a34a", marginTop: 2 }}>used</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {winner && (
         <div style={{ margin: "0 24px 24px", padding: "16px 20px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 4, fontSize: 13, color: "#15803d" }}>
