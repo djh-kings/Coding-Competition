@@ -14,6 +14,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json(rows[0]);
 }
 
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getTeacherSession();
+  if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  const { id } = await params;
+  await db.delete(submissions).where(eq(submissions.id, id));
+  return NextResponse.json({ ok: true });
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getTeacherSession();
   if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });

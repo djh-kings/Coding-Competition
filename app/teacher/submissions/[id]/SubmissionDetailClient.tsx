@@ -28,6 +28,7 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
   const [running, setRunning] = useState(false);
   const [stdin, setStdin] = useState("");
   const [confirmWinner, setConfirmWinner] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function patch(body: object) {
     await fetch(`/api/teacher/submissions/${submission.id}`, {
@@ -95,6 +96,12 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
             cursor: winner ? "not-allowed" : "pointer", opacity: winner ? 0.6 : 1,
           }}>
             {winner ? "🏆 Winner" : "Mark as winner"}
+          </button>
+          <button onClick={() => setConfirmDelete(true)} style={{
+            background: "#fff", border: "1px solid #fca5a5", color: "#dc2626",
+            fontSize: 13, padding: "7px 14px", borderRadius: 4, cursor: "pointer",
+          }}>
+            Delete
           </button>
         </div>
       </div>
@@ -168,6 +175,29 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
           </button>
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      {confirmDelete && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+          <div style={{ background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 4px 24px rgba(0,0,0,.12)", padding: 32, maxWidth: 420, width: "90%" }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, color: "#dc2626", marginBottom: 12 }}>Delete submission?</h2>
+            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 24 }}>
+              This will permanently delete <strong style={{ color: "#162233" }}>{submission.studentName ?? "this student"}&apos;s</strong> submission. Their access code will be freed so they can resubmit.
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button onClick={() => setConfirmDelete(false)} style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 13, padding: "8px 16px", borderRadius: 4, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button onClick={async () => {
+                await fetch(`/api/teacher/submissions/${submission.id}`, { method: "DELETE" });
+                window.location.href = "/teacher/dashboard";
+              }} style={{ background: "#dc2626", color: "#fff", border: "none", fontSize: 13, fontWeight: 500, padding: "8px 16px", borderRadius: 4, cursor: "pointer" }}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Winner confirmation dialog */}
       {confirmWinner && (
