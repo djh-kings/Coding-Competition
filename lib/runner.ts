@@ -48,23 +48,32 @@ interface RunResult { stdout: string; stderr: string; code: number; }
 
 async function runPython(code: string, stdin: string): Promise<RunResult> {
   const py = await getPyodide();
-  let stdout = "";
+  let shell = "";
   let stderr = "";
-  py.setStdout({ batched: (s) => { stdout += s + "\n"; } });
-  py.setStderr({ batched: (s) => { stderr += s + "\n"; } });
-  const lines = stdin.length ? stdin.split("\n") : [];
+  const lines = stdin.length ? stdin.split("\n").filter((_, i, a) => i < a.length) : [];
   let i = 0;
-  py.setStdin({ stdin: () => (i < lines.length ? lines[i++] : null) });
+  py.setStdout({ batched: (s) => { shell += s + "\n"; } });
+  py.setStderr({ batched: (s) => { stderr += s + "\n"; } });
+  py.setStdin({
+    stdin: () => {
+      if (i < lines.length) {
+        const val = lines[i++];
+        shell += val + "\n";
+        return val;
+      }
+      return null;
+    },
+  });
   try {
     await py.runPythonAsync(code);
-    return { stdout, stderr, code: 0 };
+    return { stdout: shell, stderr, code: 0 };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     const isEof = msg.includes("EOFError") || msg.includes("EOF when reading");
     const display = isEof
-      ? "Your code calls input() but no input was provided.\nType your input values in the Input box above, then click Run again."
+      ? "Your code called input() but ran out of input values.\nAdd more lines to the input area and run again."
       : msg;
-    return { stdout, stderr: stderr + display, code: 1 };
+    return { stdout: shell, stderr: stderr + display, code: 1 };
   }
 }
 
