@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { runWithTests, preloadPython, type RunOutput } from "@/lib/runner";
 
-const CodeEditor = dynamic(() => import("@/components/CodeEditor").then(m => ({ default: m.CodeEditor })), { ssr: false });
+const CodeEditor = dynamic(
+  () => import("@/components/CodeEditor").then(m => ({ default: m.CodeEditor })),
+  { ssr: false }
+);
 
 interface Competition { id: string; name: string; deadline: string; problemHtml: string; }
+
+type TermLine =
+  | { kind: "out"; text: string }
+  | { kind: "err"; text: string }
+  | { kind: "info"; text: string }
+  | { kind: "input_echo"; text: string };
 
 const DEFAULT_CODE = `# Write your solution here\n\n`;
 
@@ -15,23 +23,25 @@ export function WorkspaceClient() {
   const [code, setCode] = useState(DEFAULT_CODE);
   const [language, setLanguage] = useState("python");
   const [collapsed, setCollapsed] = useState(false);
-  const [shellLines, setShellLines] = useState<{ text: string; type: "info" | "out" | "err" | "input" }[]>([
-    { text: "Python 3.12 (Pyodide) — type your input below, then click Run", type: "info" },
+  const [lines, setLines] = useState<TermLine[]>([
+    { kind: "info", text: "Python 3.12 — press Run to execute your code" },
   ]);
-  const [inputValue, setInputValue] = useState("");
   const [running, setRunning] = useState(false);
+  const [waitingInput, setWaitingInput] = useState(false);
+  const [inputVal, setInputVal] = useState("");
+  const [timer, setTimer] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [timer, setTimer] = useState("");
-  const shellRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const termRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const controlBufRef = useRef<SharedArrayBuffer | null>(null);
+  const dataBufRef = useRef<SharedArrayBuffer | null>(null);
 
   useEffect(() => {
-    fetch("/api/competition/active")
-      .then(r => r.json())
-      .then(setComp);
-    preloadPython();
+    fetch("/api/competition/active").then(r => r.json()).then(setComp);
   }, []);
 
   useEffect(() => {
@@ -53,7 +63,7 @@ export function WorkspaceClient() {
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
-      setTimer(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")} remaining`);
+      setTimer(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")} remaining`);
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -61,44 +71,95 @@ export function WorkspaceClient() {
   }, [comp]);
 
   useEffect(() => {
-    if (shellRef.current) shellRef.current.scrollTop = shellRef.current.scrollHeight;
-  }, [shellLines]);
+    if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight;
+  }, [lines, waitingInput]);
 
-  async function handleRun() {
-    if (!comp) return;
-    setRunning(true);
-    setShellLines(prev => [
-      ...prev,
-      { text: ">>> Running…", type: "info" },
-    ]);
-    try {
-      const result: RunOutput = await runWithTests(code, language, [], inputValue);
-      setShellLines(prev => {
-        const next = prev.filter(l => l.text !== ">>> Running…");
-        next.push({ text: `>>> Run${inputValue.trim() ? ` (input: ${inputValue.trim().split("\n").join(", ")})` : ""}`, type: "info" });
-        if (result.stdout) {
-          for (const line of result.stdout.split("\n")) {
-            if (line !== "") next.push({ text: line, type: "out" });
-          }
-        }
-        if (result.stderr) {
-          for (const line of result.stderr.split("\n")) {
-            if (line !== "") next.push({ text: line, type: "err" });
-          }
-        }
-        if (!result.stdout && !result.stderr) next.push({ text: "(no output)", type: "info" });
-        return next;
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setShellLines(prev => {
-        const next = prev.filter(l => l.text !== ">>> Running…");
-        next.push({ text: msg, type: "err" });
-        return next;
-      });
-    } finally {
-      setRunning(false);
+  useEffect(() => {
+    if (waitingInput && inputRef.current) inputRef.current.focus();
+  }, [waitingInput]);
+
+  const appendLine = useCallback((line: TermLine) => {
+    setLines(prev => [...prev, line]);
+  }, []);
+
+  function handleRun() {
+    if (running) return;
+
+    // Kill previous worker if any
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
     }
+
+    setLines(prev => [
+      ...prev,
+      { kind: "info", text: "─────────────────────────" },
+      { kind: "info", text: `>>> Run` },
+    ]);
+    setRunning(true);
+    setWaitingInput(false);
+
+    const controlBuf = new SharedArrayBuffer(8);   // Int32Array[2]: [state, len]
+    const dataBuf = new SharedArrayBuffer(4096);   // Uint8Array for input text
+    controlBufRef.current = controlBuf;
+    dataBufRef.current = dataBuf;
+
+    const worker = new Worker("/pyodide-worker.js");
+    workerRef.current = worker;
+
+    worker.onmessage = (e) => {
+      const { type, text, exitCode } = e.data;
+      if (type === "stdout") {
+        const trimmed = text.replace(/\n$/, "");
+        for (const line of trimmed.split("\n")) {
+          appendLine({ kind: "out", text: line });
+        }
+      } else if (type === "stderr") {
+        const trimmed = text.replace(/\n$/, "");
+        for (const line of trimmed.split("\n")) {
+          appendLine({ kind: "err", text: line });
+        }
+      } else if (type === "input_needed") {
+        setWaitingInput(true);
+      } else if (type === "done") {
+        setRunning(false);
+        setWaitingInput(false);
+        if (exitCode === 0) {
+          appendLine({ kind: "info", text: `Finished` });
+        }
+        worker.terminate();
+        workerRef.current = null;
+      }
+    };
+
+    worker.postMessage({ type: "run", code, language, controlBuf, dataBuf });
+  }
+
+  function submitInput() {
+    if (!waitingInput || !controlBufRef.current || !dataBufRef.current) return;
+    const val = inputVal;
+    setInputVal("");
+    setWaitingInput(false);
+    appendLine({ kind: "input_echo", text: val });
+
+    const control = new Int32Array(controlBufRef.current);
+    const dataArr = new Uint8Array(dataBufRef.current);
+    const encoded = new TextEncoder().encode(val + "\n");
+    dataArr.set(encoded, 0);
+    Atomics.store(control, 1, encoded.length);
+    Atomics.store(control, 0, 1);
+    Atomics.notify(control, 0);
+  }
+
+  function handleInputKey(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitInput();
+    }
+  }
+
+  function handleClear() {
+    setLines([{ kind: "info", text: "Shell cleared." }]);
   }
 
   async function handleSubmit() {
@@ -115,17 +176,13 @@ export function WorkspaceClient() {
     }
   }
 
-  function handleClear() {
-    setShellLines([{ text: "Shell cleared.", type: "info" }]);
-  }
-
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Top bar */}
       <div style={{ background: "#162233", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8" }}>{comp?.name ?? "Loading…"}</span>
-          <span style={{ color: "#374151", fontSize: 12 }}>·</span>
+          <span style={{ color: "#374151" }}>·</span>
           <span style={{ fontSize: 12, color: "#64748b" }}>{timer}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -133,23 +190,15 @@ export function WorkspaceClient() {
             <option value="python">Python 3</option>
             <option value="javascript">JavaScript</option>
           </select>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", animation: "pulse 2s ease-in-out infinite", display: "inline-block" }} />
-          <span style={{ fontSize: 12, color: "#64748b" }}>Connected</span>
         </div>
       </div>
 
-      {/* Main area */}
+      {/* Main */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Problem panel */}
         <div style={{
-          width: collapsed ? 40 : 340,
-          flexShrink: 0,
-          borderRight: "1px solid #e2e6ed",
-          display: "flex",
-          flexDirection: "column",
-          transition: "width 0.2s",
-          overflow: "hidden",
-          background: "#fff",
+          width: collapsed ? 40 : 340, flexShrink: 0, borderRight: "1px solid #e2e6ed",
+          display: "flex", flexDirection: "column", transition: "width 0.2s", overflow: "hidden", background: "#fff",
         }}>
           {collapsed ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 16, gap: 12 }}>
@@ -167,27 +216,26 @@ export function WorkspaceClient() {
                 </button>
               </div>
               <div style={{ flex: 1, overflowY: "auto", padding: 20, fontSize: 13, color: "#475569", lineHeight: 1.7 }}
-                dangerouslySetInnerHTML={{ __html: comp?.problemHtml ?? "<p>Loading…</p>" }}
-              />
+                dangerouslySetInnerHTML={{ __html: comp?.problemHtml ?? "<p>Loading…</p>" }} />
             </>
           )}
         </div>
 
-        {/* Editor + Shell (IDLE style: editor top, shell bottom) */}
+        {/* Editor + Shell */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "#1e1e2e" }}>
-
           {/* Editor */}
-          <div style={{ flex: "0 0 55%", minHeight: 0, display: "flex", flexDirection: "column", borderBottom: "2px solid #0d0f1a" }}>
+          <div style={{ flex: "0 0 50%", minHeight: 0, display: "flex", flexDirection: "column", borderBottom: "2px solid #0d0f1a" }}>
             <div style={{ background: "#151827", padding: "6px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-              <span style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em" }}>Editor</span>
+              <span style={{ fontSize: 11, color: "#475569", textTransform: "uppercase", letterSpacing: "0.07em" }}>Editor</span>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={handleRun} disabled={running} style={{
                   background: "#2558d4", border: "none", color: "#fff",
-                  fontSize: 12, fontWeight: 600, padding: "5px 14px", borderRadius: 4, cursor: running ? "not-allowed" : "pointer",
-                  opacity: running ? 0.7 : 1, display: "flex", alignItems: "center", gap: 6,
+                  fontSize: 12, fontWeight: 600, padding: "5px 14px", borderRadius: 4,
+                  cursor: running ? "not-allowed" : "pointer", opacity: running ? 0.7 : 1,
+                  display: "flex", alignItems: "center", gap: 6,
                 }}>
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="white"><path d="M2 1l7 4-7 4V1z"/></svg>
-                  {running ? "Running…" : "Run (F5)"}
+                  {running ? "Running…" : "Run"}
                 </button>
                 <button onClick={() => setShowModal(true)} disabled={submitted} style={{
                   background: submitted ? "#374151" : "#16a34a", color: "#fff", border: "none",
@@ -203,59 +251,59 @@ export function WorkspaceClient() {
             </div>
           </div>
 
-          {/* Shell */}
+          {/* Shell / terminal */}
           <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ background: "#0d0f1a", padding: "5px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, borderBottom: "1px solid #1a1f35" }}>
-              <span style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em" }}>Shell</span>
+              <span style={{ fontSize: 11, color: "#475569", textTransform: "uppercase", letterSpacing: "0.07em" }}>Console</span>
               <button onClick={handleClear} style={{ background: "none", border: "none", color: "#475569", fontSize: 11, cursor: "pointer" }}>Clear</button>
             </div>
-
-            {/* Shell output */}
-            <div ref={shellRef} style={{ flex: 1, overflowY: "auto", padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.7, background: "#0d0f1a" }}>
-              {shellLines.map((line, i) => (
+            <div
+              ref={termRef}
+              onClick={() => waitingInput && inputRef.current?.focus()}
+              style={{ flex: 1, overflowY: "auto", padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.8, background: "#0d0f1a", cursor: waitingInput ? "text" : "default" }}
+            >
+              {lines.map((l, i) => (
                 <div key={i} style={{
-                  color: line.type === "err" ? "#f87171" : line.type === "info" ? "#475569" : line.type === "input" ? "#a78bfa" : "#e2e8f0",
+                  color: l.kind === "err" ? "#f87171" : l.kind === "info" ? "#334155" : l.kind === "input_echo" ? "#a5b4fc" : "#e2e8f0",
                   whiteSpace: "pre-wrap", wordBreak: "break-all",
                 }}>
-                  {line.text}
+                  {l.text}
                 </div>
               ))}
-              {running && <div style={{ color: "#475569" }}>▋</div>}
-            </div>
 
-            {/* Input area */}
-            <div style={{ background: "#0d0f1a", borderTop: "1px solid #1a1f35", padding: "8px 16px", flexShrink: 0 }}>
-              <div style={{ fontSize: 10, color: "#334155", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
-                Input — type values your code needs (one per line), then click Run
-              </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <span style={{ color: "#475569", fontFamily: "var(--font-mono)", fontSize: 13, paddingTop: 6, flexShrink: 0 }}>stdin&gt;</span>
-                <textarea
-                  ref={inputRef}
-                  value={inputValue}
-                  onChange={e => setInputValue(e.target.value)}
-                  rows={2}
-                  placeholder={"5\n10"}
-                  style={{
-                    flex: 1, background: "#111827", border: "1px solid #1e293b", borderRadius: 3,
-                    color: "#a5b4fc", fontFamily: "var(--font-mono)", fontSize: 13,
-                    padding: "5px 8px", resize: "vertical", outline: "none", boxSizing: "border-box",
-                  }}
-                />
-              </div>
+              {/* Inline input prompt */}
+              {waitingInput && (
+                <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                  <input
+                    ref={inputRef}
+                    value={inputVal}
+                    onChange={e => setInputVal(e.target.value)}
+                    onKeyDown={handleInputKey}
+                    autoFocus
+                    style={{
+                      background: "transparent", border: "none", outline: "none",
+                      color: "#a5b4fc", fontFamily: "var(--font-mono)", fontSize: 13,
+                      flex: 1, caretColor: "#a5b4fc", padding: 0,
+                    }}
+                  />
+                  <span style={{ color: "#475569", fontSize: 11, marginLeft: 8 }}>↵ Enter</span>
+                </div>
+              )}
+
+              {running && !waitingInput && (
+                <span style={{ color: "#475569", animation: "blink 1s step-end infinite" }}>▋</span>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Submit confirmation modal */}
+      {/* Submit modal */}
       {showModal && !submitted && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
-          <div style={{ background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 4px 24px rgba(0,0,0,.12)", padding: 36, maxWidth: 480, width: "90%" }}>
+          <div style={{ background: "#fff", borderRadius: 4, padding: 36, maxWidth: 480, width: "90%", boxShadow: "0 4px 24px rgba(0,0,0,.15)" }}>
             <h2 style={{ fontSize: 17, fontWeight: 600, color: "#162233", marginBottom: 12 }}>Submit your solution?</h2>
-            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 24 }}>
-              Once submitted, you cannot change your code. Make sure you&apos;re happy with your solution.
-            </p>
+            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 24 }}>Once submitted you cannot change your code.</p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button onClick={() => setShowModal(false)} style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 13, padding: "8px 16px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
               <button onClick={handleSubmit} style={{ background: "#2558d4", color: "#fff", border: "none", fontSize: 13, fontWeight: 500, padding: "8px 16px", borderRadius: 4, cursor: "pointer" }}>Submit</button>
@@ -267,15 +315,15 @@ export function WorkspaceClient() {
       {/* Submitted modal */}
       {submitted && showModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
-          <div style={{ background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 4px 24px rgba(0,0,0,.12)", padding: 36, maxWidth: 480, width: "90%" }}>
+          <div style={{ background: "#fff", borderRadius: 4, padding: 36, maxWidth: 480, width: "90%", boxShadow: "0 4px 24px rgba(0,0,0,.15)" }}>
             <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 11l4 4 8-8" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <h2 style={{ fontSize: 19, fontWeight: 600, color: "#162233", marginBottom: 8 }}>Submission received</h2>
-            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>Your solution has been submitted. Keep this confirmation code safe.</p>
+            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>Keep this confirmation code safe.</p>
             <p style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em", marginBottom: 8 }}>Confirmation code</p>
             <div style={{ display: "flex", borderRadius: 4, overflow: "hidden", border: "1px solid #e2e6ed", marginBottom: 16 }}>
-              <span style={{ flex: 1, padding: "12px 14px", fontFamily: "var(--font-mono)", fontSize: 16, fontWeight: 500, letterSpacing: "0.05em", color: "#162233", background: "#f7f8fa" }}>{confirmationCode}</span>
+              <span style={{ flex: 1, padding: "12px 14px", fontFamily: "var(--font-mono)", fontSize: 16, fontWeight: 500, color: "#162233", background: "#f7f8fa" }}>{confirmationCode}</span>
               <button onClick={() => navigator.clipboard.writeText(confirmationCode ?? "")} style={{ background: "#162233", color: "#fff", border: "none", padding: "0 14px", cursor: "pointer" }}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="8" height="9" rx="1" stroke="white" strokeWidth="1.2"/><path d="M4 4V3a1 1 0 011-1h6a1 1 0 011 1v7a1 1 0 01-1 1h-1" stroke="white" strokeWidth="1.2"/></svg>
               </button>
@@ -286,7 +334,7 @@ export function WorkspaceClient() {
       )}
 
       <style>{`
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
       `}</style>
     </div>
   );
