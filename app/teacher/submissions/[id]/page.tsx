@@ -14,12 +14,6 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
   if (!rows.length) redirect("/teacher/dashboard");
 
   const sub = rows[0];
-  const comp = await db.select().from(competitions).where(eq(competitions.id, sub.competitionId)).limit(1);
 
-  return (
-    <SubmissionDetailClient
-      submission={sub}
-      testCases={comp[0] ? JSON.parse(comp[0].testCases) : []}
-    />
-  );
+  return <SubmissionDetailClient submission={sub} />;
 }

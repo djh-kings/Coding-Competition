@@ -4,8 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-interface TestCase { input: string; expected: string; }
-
 const inputStyle: React.CSSProperties = {
   padding: "10px 14px",
   border: "1px solid #d1d5db",
@@ -32,22 +30,9 @@ export function NewCompetitionClient() {
   const [time, setTime] = useState("17:00");
   const [problemHtml, setProblemHtml] = useState("<h3>Problem title</h3>\n<p>Describe the problem here.</p>");
   const [codeCount, setCodeCount] = useState(20);
-  const [testCases, setTestCases] = useState<TestCase[]>([{ input: "", expected: "" }]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ codes: string[] } | null>(null);
-
-  function updateTestCase(i: number, field: keyof TestCase, value: string) {
-    setTestCases(prev => prev.map((tc, idx) => idx === i ? { ...tc, [field]: value } : tc));
-  }
-
-  function addTestCase() {
-    setTestCases(prev => [...prev, { input: "", expected: "" }]);
-  }
-
-  function removeTestCase(i: number) {
-    setTestCases(prev => prev.filter((_, idx) => idx !== i));
-  }
 
   async function handlePublish() {
     setError("");
@@ -58,11 +43,10 @@ export function NewCompetitionClient() {
     setSubmitting(true);
     try {
       const deadline = new Date(`${date}T${time}`).toISOString();
-      const validCases = testCases.filter(t => t.input.trim() || t.expected.trim());
       const res = await fetch("/api/teacher/competitions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, deadline, problemHtml, testCases: validCases, codeCount }),
+        body: JSON.stringify({ name, deadline, problemHtml, testCases: [], codeCount }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -137,24 +121,6 @@ export function NewCompetitionClient() {
             rows={10}
             style={{ ...inputStyle, width: "100%", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.65, borderRadius: "0 0 4px 4px", resize: "vertical" }}
           />
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <label style={labelStyle}>Test cases</label>
-          <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
-            Used to validate student submissions when they hit Run.
-            Put each <code style={{ background: "#f7f8fa", padding: "1px 4px", borderRadius: 2 }}>input()</code> value on its own line — one value per line.
-          </p>
-          {testCases.map((tc, i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, marginBottom: 8, alignItems: "start" }}>
-              <textarea placeholder={"Input (stdin)\nOne value per line"} value={tc.input} onChange={e => updateTestCase(i, "input", e.target.value)} rows={3} style={{ ...inputStyle, fontFamily: "var(--font-mono)", fontSize: 13, resize: "vertical" }} />
-              <textarea placeholder="Expected output" value={tc.expected} onChange={e => updateTestCase(i, "expected", e.target.value)} rows={3} style={{ ...inputStyle, fontFamily: "var(--font-mono)", fontSize: 13, resize: "vertical" }} />
-              <button onClick={() => removeTestCase(i)} disabled={testCases.length === 1} style={{ background: "#fff", border: "1px solid #d1d5db", color: "#64748b", padding: "6px 12px", borderRadius: 4, cursor: testCases.length === 1 ? "not-allowed" : "pointer", height: 32 }}>×</button>
-            </div>
-          ))}
-          <button onClick={addTestCase} style={{ background: "#f7f8fa", border: "1px solid #d1d5db", color: "#475569", fontSize: 12, fontWeight: 500, padding: "6px 12px", borderRadius: 4, cursor: "pointer", marginTop: 4 }}>
-            + Add test case
-          </button>
         </div>
 
         <div style={{ marginBottom: 24 }}>

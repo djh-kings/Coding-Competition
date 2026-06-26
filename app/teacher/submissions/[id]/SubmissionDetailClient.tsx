@@ -3,13 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { runWithTests } from "@/lib/runner";
+import { runWithTests, type RunOutput } from "@/lib/runner";
 
 const CodeEditor = dynamic(() => import("@/components/CodeEditor").then(m => ({ default: m.CodeEditor })), { ssr: false });
-
-interface TestCase { input: string; expected: string; }
-interface TestResult { input: string; expected: string; actual: string; pass: boolean; }
-interface RunOutput { stdout: string; stderr: string; exitCode: number; duration: string; testResults: TestResult[]; }
 
 interface Submission {
   id: string;
@@ -23,14 +19,13 @@ interface Submission {
   studentName: string | null;
 }
 
-export function SubmissionDetailClient({ submission, testCases }: { submission: Submission; testCases: TestCase[] }) {
+export function SubmissionDetailClient({ submission }: { submission: Submission }) {
   const [shortlisted, setShortlisted] = useState(submission.shortlisted ?? false);
   const [winner, setWinner] = useState(submission.winner ?? false);
   const [comment, setComment] = useState(submission.comment ?? "");
   const [commentSaved, setCommentSaved] = useState(false);
   const [runOutput, setRunOutput] = useState<RunOutput | null>(null);
   const [running, setRunning] = useState(false);
-  const [outputTab, setOutputTab] = useState<"output" | "testcases">("output");
   const [confirmWinner, setConfirmWinner] = useState(false);
 
   async function patch(body: object) {
@@ -61,9 +56,8 @@ export function SubmissionDetailClient({ submission, testCases }: { submission: 
 
   async function handleRun() {
     setRunning(true);
-    setOutputTab("output");
     try {
-      setRunOutput(await runWithTests(submission.code, submission.language, testCases));
+      setRunOutput(await runWithTests(submission.code, submission.language, []));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setRunOutput({ stdout: "", stderr: msg, exitCode: 1, duration: "0", testResults: [] });
@@ -71,8 +65,6 @@ export function SubmissionDetailClient({ submission, testCases }: { submission: 
       setRunning(false);
     }
   }
-
-  const passingCount = runOutput?.testResults.filter(r => r.pass).length ?? 0;
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -126,38 +118,22 @@ export function SubmissionDetailClient({ submission, testCases }: { submission: 
 
           {/* Output */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 200 }}>
-            <div style={{ background: "#f7f8fa", borderBottom: "1px solid #e2e6ed", padding: "0 16px", display: "flex" }}>
-              {(["output", "testcases"] as const).map(tab => (
-                <button key={tab} onClick={() => setOutputTab(tab)} style={{
-                  fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.07em",
-                  padding: "10px 12px", background: "none", border: "none", cursor: "pointer",
-                  color: outputTab === tab ? "#2558d4" : "#94a3b8",
-                  borderBottom: outputTab === tab ? "2px solid #2558d4" : "2px solid transparent",
-                }}>
-                  {tab === "testcases" ? `Test Cases${runOutput ? ` (${passingCount}/${runOutput.testResults.length})` : ""}` : "Output"}
-                </button>
-              ))}
+            <div style={{ background: "#f7f8fa", borderBottom: "1px solid #e2e6ed", padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.07em", color: "#2558d4", padding: "10px 0" }}>Output</span>
+              {runOutput && (
+                <span style={{ fontSize: 11, color: runOutput.exitCode === 0 ? "#16a34a" : "#dc2626" }}>
+                  Exit {runOutput.exitCode} · {runOutput.duration}s
+                </span>
+              )}
             </div>
             <div style={{ flex: 1, padding: "14px 18px", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.7, overflowY: "auto" }}>
-              {outputTab === "output" ? (
-                runOutput ? (
-                  <>
-                    {runOutput.stdout && <pre style={{ margin: 0, color: "#162233" }}>{runOutput.stdout}</pre>}
-                    {runOutput.stderr && <pre style={{ margin: 0, color: "#dc2626" }}>{runOutput.stderr}</pre>}
-                  </>
-                ) : <span style={{ color: "#94a3b8" }}>Run the code to see output.</span>
-              ) : (
-                runOutput?.testResults.map((r, i) => (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-                    {(["Input", "Expected", "Your output"] as const).map((label, j) => (
-                      <div key={label} style={{ border: `1px solid ${r.pass ? "#bbf7d0" : "#fecaca"}`, borderRadius: 4, padding: 8 }}>
-                        <div style={{ fontSize: 10, textTransform: "uppercase", color: "#94a3b8", marginBottom: 4 }}>{label}</div>
-                        <pre style={{ margin: 0, fontSize: 12 }}>{[r.input, r.expected, r.actual][j]}</pre>
-                      </div>
-                    ))}
-                  </div>
-                )) ?? <span style={{ color: "#94a3b8" }}>Run to see test results.</span>
-              )}
+              {runOutput ? (
+                <>
+                  {runOutput.stdout && <pre style={{ margin: 0, color: "#162233" }}>{runOutput.stdout}</pre>}
+                  {runOutput.stderr && <pre style={{ margin: 0, color: "#dc2626" }}>{runOutput.stderr}</pre>}
+                  {!runOutput.stdout && !runOutput.stderr && <span style={{ color: "#94a3b8" }}>No output</span>}
+                </>
+              ) : <span style={{ color: "#94a3b8" }}>Run the code to see output.</span>}
             </div>
           </div>
         </div>
