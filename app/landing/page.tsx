@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
 import { CountdownTimer } from "@/components/CountdownTimer";
 
+export const dynamic = "force-dynamic";
+
 export default async function LandingPage() {
   const rows = await db.select().from(competitions).where(eq(competitions.active, true)).limit(1);
   const comp = rows[0] ?? null;
