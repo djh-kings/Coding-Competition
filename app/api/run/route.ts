@@ -39,39 +39,52 @@ async function runCode(code: string, language: string, stdin: string): Promise<P
   }
 }
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
-  const session = await getStudentSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  }
+  try {
+    const session = await getStudentSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+    }
 
-  const { code, language, testCases } = await req.json() as {
-    code: string;
-    language: string;
-    testCases: TestCase[];
-  };
+    const { code, language, testCases } = await req.json() as {
+      code: string;
+      language: string;
+      testCases: TestCase[];
+    };
 
-  const start = Date.now();
-  const result = await runCode(code, language, "");
-  const duration = ((Date.now() - start) / 1000).toFixed(2);
+    const start = Date.now();
+    const result = await runCode(code, language, "");
+    const duration = ((Date.now() - start) / 1000).toFixed(2);
 
-  const testResults = [];
-  for (const tc of testCases ?? []) {
-    const r = await runCode(code, language, tc.input);
-    const actual = r.run.stdout.trim();
-    testResults.push({
-      input: tc.input,
-      expected: tc.expected,
-      actual,
-      pass: actual === tc.expected.trim(),
+    const testResults = [];
+    for (const tc of testCases ?? []) {
+      const r = await runCode(code, language, tc.input);
+      const actual = r.run.stdout.trim();
+      testResults.push({
+        input: tc.input,
+        expected: tc.expected,
+        actual,
+        pass: actual === tc.expected.trim(),
+      });
+    }
+
+    return NextResponse.json({
+      stdout: result.run.stdout,
+      stderr: result.run.stderr,
+      exitCode: result.run.code,
+      duration,
+      testResults,
     });
+  } catch (err) {
+    const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    return NextResponse.json({
+      stdout: "",
+      stderr: `Server error: ${msg}`,
+      exitCode: 1,
+      duration: "0",
+      testResults: [],
+    }, { status: 200 });
   }
-
-  return NextResponse.json({
-    stdout: result.run.stdout,
-    stderr: result.run.stderr,
-    exitCode: result.run.code,
-    duration,
-    testResults,
-  });
 }
