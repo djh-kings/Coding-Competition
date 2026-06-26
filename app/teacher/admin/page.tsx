@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getTeacherSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { competitions, submissions } from "@/db/schema";
+import { competitions, submissions, accessCodes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
 
@@ -16,10 +16,16 @@ export default async function AdminPage() {
 
   const compStats = await Promise.all(
     allComps.map(async (c) => {
-      const subs = await db.select().from(submissions).where(eq(submissions.competitionId, c.id));
+      const [subs, codes] = await Promise.all([
+        db.select().from(submissions).where(eq(submissions.competitionId, c.id)),
+        db.select().from(accessCodes).where(eq(accessCodes.competitionId, c.id)),
+      ]);
+      const submittedIds = new Set(subs.map(s => s.accessCodeId));
       const winner = subs.find(s => s.winner);
       const shortlisted = subs.filter(s => s.shortlisted);
-      return { ...c, subCount: subs.length, winner, shortlisted };
+      const submitted = codes.filter(c => submittedIds.has(c.id));
+      const notSubmitted = codes.filter(c => !submittedIds.has(c.id));
+      return { ...c, subCount: subs.length, winner, shortlisted, submitted, notSubmitted, totalCodes: codes.length };
     })
   );
 
@@ -111,12 +117,48 @@ export default async function AdminPage() {
                 </div>
 
                 {/* Stats */}
-                <div style={{ display: "flex", gap: 24, marginBottom: c.winner || c.shortlisted.length > 0 ? 16 : 0 }}>
+                <div style={{ display: "flex", gap: 24, marginBottom: 16 }}>
                   <div style={{ fontSize: 13, color: "#475569" }}>
-                    <span style={{ fontWeight: 600, color: "#162233" }}>{c.subCount}</span> submission{c.subCount !== 1 ? "s" : ""}
+                    <span style={{ fontWeight: 600, color: "#162233" }}>{c.subCount}</span> / {c.totalCodes} submitted
                   </div>
                   <div style={{ fontSize: 13, color: "#475569" }}>
                     <span style={{ fontWeight: 600, color: "#b45309" }}>{c.shortlisted.length}</span> shortlisted
+                  </div>
+                </div>
+
+                {/* Submitted / not submitted */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: c.winner || c.shortlisted.length > 0 ? 16 : 0 }}>
+                  <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 4, padding: "10px 14px" }}>
+                    <div style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", color: "#15803d", letterSpacing: "0.07em", marginBottom: 6 }}>
+                      Submitted ({c.submitted.length})
+                    </div>
+                    {c.submitted.length === 0 ? (
+                      <span style={{ fontSize: 12, color: "#94a3b8" }}>None yet</span>
+                    ) : (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {c.submitted.map(ac => (
+                          <span key={ac.id} style={{ fontSize: 12, color: "#15803d", background: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: 3, padding: "2px 7px" }}>
+                            ✓ {ac.studentName ?? ac.code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ background: "#fafafa", border: "1px solid #e2e6ed", borderRadius: 4, padding: "10px 14px" }}>
+                    <div style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em", marginBottom: 6 }}>
+                      Not submitted ({c.notSubmitted.length})
+                    </div>
+                    {c.notSubmitted.length === 0 ? (
+                      <span style={{ fontSize: 12, color: "#16a34a" }}>Everyone submitted!</span>
+                    ) : (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {c.notSubmitted.map(ac => (
+                          <span key={ac.id} style={{ fontSize: 12, color: "#64748b", background: "#f1f5f9", border: "1px solid #e2e6ed", borderRadius: 3, padding: "2px 7px" }}>
+                            {ac.studentName ?? ac.code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
