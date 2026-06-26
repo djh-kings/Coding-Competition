@@ -141,12 +141,15 @@ export function NewCompetitionClient() {
 
         <div style={{ marginBottom: 24 }}>
           <label style={labelStyle}>Test cases</label>
-          <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>Used to validate student submissions when they hit Run.</p>
+          <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
+            Used to validate student submissions when they hit Run.
+            Put each <code style={{ background: "#f7f8fa", padding: "1px 4px", borderRadius: 2 }}>input()</code> value on its own line — one value per line.
+          </p>
           {testCases.map((tc, i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, marginBottom: 8 }}>
-              <input type="text" placeholder="Input (stdin)" value={tc.input} onChange={e => updateTestCase(i, "input", e.target.value)} style={{ ...inputStyle, fontFamily: "var(--font-mono)", fontSize: 13 }} />
-              <input type="text" placeholder="Expected output" value={tc.expected} onChange={e => updateTestCase(i, "expected", e.target.value)} style={{ ...inputStyle, fontFamily: "var(--font-mono)", fontSize: 13 }} />
-              <button onClick={() => removeTestCase(i)} disabled={testCases.length === 1} style={{ background: "#fff", border: "1px solid #d1d5db", color: "#64748b", padding: "0 12px", borderRadius: 4, cursor: testCases.length === 1 ? "not-allowed" : "pointer" }}>×</button>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, marginBottom: 8, alignItems: "start" }}>
+              <textarea placeholder={"Input (stdin)\nOne value per line"} value={tc.input} onChange={e => updateTestCase(i, "input", e.target.value)} rows={3} style={{ ...inputStyle, fontFamily: "var(--font-mono)", fontSize: 13, resize: "vertical" }} />
+              <textarea placeholder="Expected output" value={tc.expected} onChange={e => updateTestCase(i, "expected", e.target.value)} rows={3} style={{ ...inputStyle, fontFamily: "var(--font-mono)", fontSize: 13, resize: "vertical" }} />
+              <button onClick={() => removeTestCase(i)} disabled={testCases.length === 1} style={{ background: "#fff", border: "1px solid #d1d5db", color: "#64748b", padding: "6px 12px", borderRadius: 4, cursor: testCases.length === 1 ? "not-allowed" : "pointer", height: 32 }}>×</button>
             </div>
           ))}
           <button onClick={addTestCase} style={{ background: "#f7f8fa", border: "1px solid #d1d5db", color: "#475569", fontSize: 12, fontWeight: 500, padding: "6px 12px", borderRadius: 4, cursor: "pointer", marginTop: 4 }}>
