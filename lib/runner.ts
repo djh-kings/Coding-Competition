@@ -60,7 +60,11 @@ async function runPython(code: string, stdin: string): Promise<RunResult> {
     return { stdout, stderr, code: 0 };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return { stdout, stderr: stderr + msg, code: 1 };
+    const isEof = msg.includes("EOFError") || msg.includes("EOF when reading");
+    const display = isEof
+      ? "Your code calls input() but no input was provided.\nType your input values in the Input box above, then click Run again."
+      : msg;
+    return { stdout, stderr: stderr + display, code: 1 };
   }
 }
 
