@@ -31,7 +31,12 @@ async function runCode(code: string, language: string, stdin: string): Promise<P
       stdin,
     }),
   });
-  return res.json();
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { run: { stdout: "", stderr: `Execution service error (${res.status}): ${text.slice(0, 200)}`, code: 1 } };
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -50,18 +55,17 @@ export async function POST(req: NextRequest) {
   const result = await runCode(code, language, "");
   const duration = ((Date.now() - start) / 1000).toFixed(2);
 
-  const testResults = await Promise.all(
-    (testCases ?? []).map(async (tc: TestCase) => {
-      const r = await runCode(code, language, tc.input);
-      const actual = r.run.stdout.trim();
-      return {
-        input: tc.input,
-        expected: tc.expected,
-        actual,
-        pass: actual === tc.expected.trim(),
-      };
-    })
-  );
+  const testResults = [];
+  for (const tc of testCases ?? []) {
+    const r = await runCode(code, language, tc.input);
+    const actual = r.run.stdout.trim();
+    testResults.push({
+      input: tc.input,
+      expected: tc.expected,
+      actual,
+      pass: actual === tc.expected.trim(),
+    });
+  }
 
   return NextResponse.json({
     stdout: result.run.stdout,
