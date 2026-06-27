@@ -34,6 +34,7 @@ export function WorkspaceClient() {
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [pseudonym, setPseudonym] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
 
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -234,6 +235,13 @@ export function WorkspaceClient() {
             <option value="javascript">JavaScript</option>
           </select>
           <button
+            onClick={() => setShowHelp(true)}
+            title="What works in this Python environment?"
+            style={{ background: "transparent", border: "1px solid #2d3748", color: "#94a3b8", fontSize: 12, padding: "3px 10px", borderRadius: 4, cursor: "pointer" }}
+          >
+            ? Help
+          </button>
+          <button
             onClick={async () => {
               if (!confirm("Sign out? Your code is saved in this browser but you will need your access code to come back.")) return;
               await fetch("/api/student/logout", { method: "POST" });
@@ -392,6 +400,53 @@ export function WorkspaceClient() {
             >
               OK — I have noted my code
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Help / runtime info modal */}
+      {showHelp && (
+        <div onClick={() => setShowHelp(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 6, padding: 32, maxWidth: 720, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 4px 24px rgba(0,0,0,.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <h2 style={{ fontSize: 19, fontWeight: 600, color: "#162233", margin: 0 }}>Python environment — what works, what doesn&apos;t</h2>
+              <button onClick={() => setShowHelp(false)} style={{ background: "none", border: "none", fontSize: 22, color: "#94a3b8", cursor: "pointer", padding: 0, lineHeight: 1 }}>×</button>
+            </div>
+
+            <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>
+              Your code runs <strong>Python 3.12</strong> in your browser (via Pyodide / WebAssembly). No code is sent to a server while you&apos;re writing — only when you click Submit.
+            </p>
+
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: "#15803d", marginBottom: 8 }}>✅ Works fine</h3>
+            <ul style={{ fontSize: 13, color: "#475569", lineHeight: 1.7, marginBottom: 18, paddingLeft: 20 }}>
+              <li><strong>All Python 3.12 language features</strong> — f-strings, type hints, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>match</code>/<code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>case</code>, comprehensions, generators, classes, decorators, async/await.</li>
+              <li><code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>print()</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>input()</code>, all built-ins, exceptions.</li>
+              <li>Standard library: <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>math</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>random</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>statistics</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>string</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>re</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>collections</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>itertools</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>functools</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>heapq</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>bisect</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>json</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>datetime</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>dataclasses</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>typing</code>, and most others.</li>
+            </ul>
+
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: "#dc2626", marginBottom: 8 }}>❌ Does NOT work</h3>
+            <ul style={{ fontSize: 13, color: "#475569", lineHeight: 1.7, marginBottom: 18, paddingLeft: 20 }}>
+              <li><code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>pip install</code> — you can&apos;t install extra libraries.</li>
+              <li>Network: <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>requests</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>urllib</code>, sockets — no real internet access.</li>
+              <li>Reading files from your computer — <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>open(&quot;data.csv&quot;)</code> won&apos;t see your local files. If you need data, paste it into a string in your code.</li>
+              <li>GUI: <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>tkinter</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>pygame</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>turtle</code>.</li>
+              <li>System: <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>os.system</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>subprocess</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>threading</code>, <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>multiprocessing</code>.</li>
+            </ul>
+
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: "#b45309", marginBottom: 8 }}>⚠️ Things to know</h3>
+            <ul style={{ fontSize: 13, color: "#475569", lineHeight: 1.7, marginBottom: 18, paddingLeft: 20 }}>
+              <li><strong>First Run is slow</strong> — Python takes a few seconds to load the first time. After that it&apos;s instant.</li>
+              <li><strong>About 3–5× slower</strong> than desktop Python — heavy loops over big data will feel sluggish.</li>
+              <li><strong>Infinite loops freeze the tab</strong> — click <em>Run</em> again to abort, or refresh the page.</li>
+              <li><strong>Multi-line input:</strong> press Enter after each value when prompted by <code style={{ background: "#f1f5f9", padding: "1px 5px", borderRadius: 3 }}>input()</code>.</li>
+              <li><strong>Your code is saved</strong> in this browser, so closing the tab won&apos;t lose your work — but a different browser or computer won&apos;t see it.</li>
+            </ul>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setShowHelp(false)} style={{ background: "#2558d4", color: "#fff", border: "none", fontSize: 13, fontWeight: 500, padding: "9px 20px", borderRadius: 4, cursor: "pointer" }}>
+                Got it
+              </button>
+            </div>
           </div>
         </div>
       )}
