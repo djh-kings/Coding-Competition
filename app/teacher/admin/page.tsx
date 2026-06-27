@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { competitions, submissions, accessCodes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
+import { DeleteCompetitionButton } from "./DeleteCompetitionButton";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +147,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                         </button>
                       </form>
                     )}
+                    <DeleteCompetitionButton id={c.id} name={c.name} subCount={c.subCount} />
                   </div>
                 </div>
 
