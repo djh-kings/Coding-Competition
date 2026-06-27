@@ -76,22 +76,30 @@ export default async function LandingPage() {
         <div style={{ padding: "8px 32px 36px", display: "flex", flexDirection: "column", gap: 14, maxWidth: 900, margin: "0 auto" }}>
           {activeComps.map((c, i) => {
             const countdown = fmtCountdown(c.deadline);
-            const isPrimary = i === 0;
+            const isClosed = new Date(c.deadline).getTime() <= Date.now();
+            const isPrimary = i === 0 && !isClosed;
             return (
               <div key={c.id} style={{
-                background: "#fff",
+                background: isClosed ? "#fafbfc" : "#fff",
                 border: "1px solid #e2e6ed",
                 borderRadius: 6,
                 padding: "22px 24px",
                 display: "flex",
                 alignItems: "center",
                 gap: 24,
+                opacity: isClosed ? 0.75 : 1,
               }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                    <span style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", fontSize: 10, fontWeight: 500, padding: "2px 8px", borderRadius: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                      Active
-                    </span>
+                    {isClosed ? (
+                      <span style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: 10, fontWeight: 500, padding: "2px 8px", borderRadius: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        Closed
+                      </span>
+                    ) : (
+                      <span style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", fontSize: 10, fontWeight: 500, padding: "2px 8px", borderRadius: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        Active
+                      </span>
+                    )}
                   </div>
                   <h3 style={{ fontSize: 18, fontWeight: 600, color: "#162233", margin: 0, marginBottom: 6 }}>{c.name}</h3>
                   {c.description && (
@@ -105,20 +113,30 @@ export default async function LandingPage() {
                 </div>
                 <div style={{ borderLeft: "1px solid #e2e6ed", paddingLeft: 24, textAlign: "right", display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
                   <div>
-                    <div style={{ fontSize: 10, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Closes in</div>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: "#162233", fontFamily: "var(--font-mono)" }}>{countdown}</div>
+                    <div style={{ fontSize: 10, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+                      {isClosed ? "Closed on" : "Closes in"}
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: isClosed ? "#94a3b8" : "#162233", fontFamily: "var(--font-mono)" }}>
+                      {isClosed ? new Date(c.deadline).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : countdown}
+                    </div>
                   </div>
-                  <Link
-                    href={`/student/login?competition=${c.id}`}
-                    style={{
-                      background: isPrimary ? "#2558d4" : "#fff",
-                      color: isPrimary ? "#fff" : "#2558d4",
-                      border: isPrimary ? "none" : "1px solid #2558d4",
-                      fontSize: 13, fontWeight: 500, padding: "8px 16px", borderRadius: 4, textDecoration: "none",
-                    }}
-                  >
-                    Enter code →
-                  </Link>
+                  {isClosed ? (
+                    <span style={{ background: "#f1f5f9", color: "#94a3b8", border: "1px solid #e2e6ed", fontSize: 13, fontWeight: 500, padding: "8px 16px", borderRadius: 4 }}>
+                      Closed
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/student/login?competition=${c.id}`}
+                      style={{
+                        background: isPrimary ? "#2558d4" : "#fff",
+                        color: isPrimary ? "#fff" : "#2558d4",
+                        border: isPrimary ? "none" : "1px solid #2558d4",
+                        fontSize: 13, fontWeight: 500, padding: "8px 16px", borderRadius: 4, textDecoration: "none",
+                      }}
+                    >
+                      Enter code →
+                    </Link>
+                  )}
                 </div>
               </div>
             );
