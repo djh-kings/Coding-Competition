@@ -8,7 +8,7 @@ const CodeEditor = dynamic(
   { ssr: false }
 );
 
-interface Competition { id: string; name: string; deadline: string; problemHtml: string; }
+interface Competition { id: string; name: string; deadline: string; problemHtml: string; studentName?: string; }
 
 type TermLine =
   | { kind: "out"; text: string }
@@ -33,6 +33,7 @@ export function WorkspaceClient() {
   const [submitted, setSubmitted] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [pseudonym, setPseudonym] = useState("");
 
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +49,14 @@ export function WorkspaceClient() {
     if (!comp) return;
     const saved = localStorage.getItem(`code-${comp.id}`);
     if (saved) setCode(saved);
+    const savedName = localStorage.getItem(`pseudonym-${comp.id}`);
+    if (savedName) setPseudonym(savedName);
   }, [comp]);
+
+  useEffect(() => {
+    if (!comp) return;
+    localStorage.setItem(`pseudonym-${comp.id}`, pseudonym);
+  }, [pseudonym, comp]);
 
   useEffect(() => {
     if (!comp) return;
@@ -184,7 +192,7 @@ export function WorkspaceClient() {
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, language }),
+        body: JSON.stringify({ code, language, pseudonym }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -207,6 +215,18 @@ export function WorkspaceClient() {
           <span style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8" }}>{comp?.name ?? "Loading…"}</span>
           <span style={{ color: "#374151" }}>·</span>
           <span style={{ fontSize: 12, color: "#64748b" }}>{timer}</span>
+          <span style={{ color: "#374151" }}>·</span>
+          <label style={{ fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", gap: 6 }}>
+            Display name:
+            <input
+              value={pseudonym}
+              onChange={e => setPseudonym(e.target.value)}
+              placeholder="(optional pseudonym)"
+              maxLength={40}
+              disabled={submitted}
+              style={{ fontSize: 12, background: "#1e293b", border: "1px solid #2d3748", color: "#cbd5e1", borderRadius: 4, padding: "3px 8px", width: 180 }}
+            />
+          </label>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <select value={language} onChange={e => setLanguage(e.target.value)} style={{ fontSize: 12, color: "#94a3b8", border: "1px solid #2d3748", borderRadius: 4, padding: "3px 8px", background: "#1e293b" }}>

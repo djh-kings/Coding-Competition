@@ -107,7 +107,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               textDecoration: "none",
               background: row.winner ? "#f0fdf4" : row.shortlisted ? "#fffbeb" : "#fff",
             }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#162233" }}>{row.studentName ?? "—"}</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#162233" }}>
+                {row.pseudonym ? `${row.pseudonym} (${row.studentName ?? "—"})` : (row.studentName ?? "—")}
+              </span>
               <span style={{ fontSize: 13, color: "#64748b" }}>{new Date(row.submittedAt ?? "").toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}</span>
               <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "#64748b" }}>{row.confirmationCode}</span>
               <span style={{ fontSize: 13, fontWeight: row.shortlisted ? 500 : 400, color: row.shortlisted ? "#b45309" : "#94a3b8" }}>

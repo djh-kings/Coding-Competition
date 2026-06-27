@@ -48,4 +48,5 @@ export const submissions = sqliteTable("submissions", {
     .notNull()
     .references(() => competitions.id),
   studentName: text("student_name"),
+  pseudonym: text("pseudonym"),
 });

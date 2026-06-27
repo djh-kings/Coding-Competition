@@ -44,9 +44,17 @@ async function migrate() {
       submitted_at TEXT DEFAULT (datetime('now')),
       access_code_id TEXT NOT NULL UNIQUE REFERENCES access_codes(id),
       competition_id TEXT NOT NULL REFERENCES competitions(id),
-      student_name TEXT
+      student_name TEXT,
+      pseudonym TEXT
     );
   `);
+
+  // Idempotent column-add for existing databases
+  try {
+    await client.execute("ALTER TABLE submissions ADD COLUMN pseudonym TEXT");
+  } catch {
+    // Column already exists — fine
+  }
 
   console.log("✓ Tables created");
 }

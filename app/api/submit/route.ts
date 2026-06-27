@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Already submitted" }, { status: 409 });
   }
 
-  const { code, language } = await req.json() as { code: string; language: string };
+  const { code, language, pseudonym } = await req.json() as { code: string; language: string; pseudonym?: string };
+  const cleanPseudonym = pseudonym?.trim().slice(0, 40) || null;
 
   const ac = await db
     .select()
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
     accessCodeId: session.sub,
     competitionId: session.competitionId,
     studentName: ac[0]?.studentName ?? "Student",
+    pseudonym: cleanPseudonym,
     submittedAt,
   });
 
