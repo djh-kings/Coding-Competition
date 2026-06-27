@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { competitions, accessCodes } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { getTeacherSession } from "@/lib/auth";
 import { randomUUID } from "crypto";
 
@@ -31,9 +30,6 @@ export async function POST(req: NextRequest) {
   if (!body.name || !body.deadline || !body.problemHtml) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
-
-  // Deactivate other competitions
-  await db.update(competitions).set({ active: false }).where(eq(competitions.active, true));
 
   const competitionId = randomUUID();
   await db.insert(competitions).values({

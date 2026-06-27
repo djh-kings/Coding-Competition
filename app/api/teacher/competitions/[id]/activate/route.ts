@@ -10,8 +10,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   const { id } = await params;
 
-  // Close all others first, then activate this one
-  await db.update(competitions).set({ active: false });
   await db.update(competitions).set({ active: true }).where(eq(competitions.id, id));
 
   return NextResponse.redirect(new URL("/teacher/admin", _req.url));
