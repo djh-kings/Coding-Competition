@@ -213,6 +213,16 @@ export function WorkspaceClient() {
             <option value="python">Python 3</option>
             <option value="javascript">JavaScript</option>
           </select>
+          <button
+            onClick={async () => {
+              if (!confirm("Sign out? Your code is saved in this browser but you will need your access code to come back.")) return;
+              await fetch("/api/student/logout", { method: "POST" });
+              window.location.href = "/";
+            }}
+            style={{ background: "transparent", border: "1px solid #2d3748", color: "#94a3b8", fontSize: 12, padding: "3px 10px", borderRadius: 4, cursor: "pointer" }}
+          >
+            Sign out
+          </button>
         </div>
       </div>
 
