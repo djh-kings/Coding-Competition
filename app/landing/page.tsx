@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { competitions } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
 import { CountdownTimer } from "@/components/CountdownTimer";
 
@@ -18,11 +18,21 @@ function fmtCountdown(deadlineIso: string) {
 }
 
 export default async function LandingPage() {
-  const activeComps = await db
+  const rawComps = await db
     .select()
     .from(competitions)
-    .where(eq(competitions.active, true))
-    .orderBy(desc(competitions.createdAt));
+    .where(eq(competitions.active, true));
+
+  // Open competitions first (soonest deadline → latest), then closed (most recently closed first)
+  const now = Date.now();
+  const activeComps = rawComps.slice().sort((a, b) => {
+    const aT = new Date(a.deadline).getTime();
+    const bT = new Date(b.deadline).getTime();
+    const aClosed = aT <= now;
+    const bClosed = bT <= now;
+    if (aClosed !== bClosed) return aClosed ? 1 : -1;
+    return aClosed ? bT - aT : aT - bT;
+  });
 
   // Single-competition variant (existing layout)
   if (activeComps.length <= 1) {
