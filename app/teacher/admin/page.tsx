@@ -8,14 +8,24 @@ import { Logo } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
   const session = await getTeacherSession();
   if (!session) redirect("/teacher/login");
 
+  const { filter = "all" } = await searchParams;
   const allComps = await db.select().from(competitions).orderBy(desc(competitions.createdAt));
+  const filteredComps =
+    filter === "active" ? allComps.filter(c => c.active) :
+    filter === "closed" ? allComps.filter(c => !c.active) :
+    allComps;
+  const counts = {
+    all: allComps.length,
+    active: allComps.filter(c => c.active).length,
+    closed: allComps.filter(c => !c.active).length,
+  };
 
   const compStats = await Promise.all(
-    allComps.map(async (c) => {
+    filteredComps.map(async (c) => {
       const [subs, codes] = await Promise.all([
         db.select().from(submissions).where(eq(submissions.competitionId, c.id)),
         db.select().from(accessCodes).where(eq(accessCodes.competitionId, c.id)),
@@ -62,14 +72,37 @@ export default async function AdminPage() {
           </Link>
         </div>
 
-        {/* All competitions */}
-        <div style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em", marginBottom: 12 }}>
-          All competitions
+        {/* Filter tabs */}
+        <div style={{ display: "flex", gap: 24, borderBottom: "1px solid #e2e6ed", marginBottom: 16 }}>
+          {([
+            { key: "all", label: "All" },
+            { key: "active", label: "Active" },
+            { key: "closed", label: "Closed" },
+          ] as const).map(t => {
+            const isActive = filter === t.key;
+            return (
+              <Link
+                key={t.key}
+                href={t.key === "all" ? "/teacher/admin" : `/teacher/admin?filter=${t.key}`}
+                style={{
+                  fontSize: 13,
+                  fontWeight: isActive ? 500 : 400,
+                  color: isActive ? "#2558d4" : "#64748b",
+                  padding: "10px 0",
+                  borderBottom: `2px solid ${isActive ? "#2558d4" : "transparent"}`,
+                  marginBottom: -1,
+                  textDecoration: "none",
+                }}
+              >
+                {t.label} <span style={{ color: "#94a3b8" }}>({counts[t.key]})</span>
+              </Link>
+            );
+          })}
         </div>
 
         {compStats.length === 0 ? (
           <div style={{ background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", padding: "32px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
-            No competitions yet.
+            {filter === "all" ? "No competitions yet." : `No ${filter} competitions.`}
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

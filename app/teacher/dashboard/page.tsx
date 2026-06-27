@@ -33,56 +33,75 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <div style={{ minHeight: "100vh", background: "#f7f8fa" }}>
-      {/* Nav */}
-      <nav style={{ background: "#fff", padding: "0 24px", borderBottom: "1px solid #e2e6ed", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      {/* Nav with breadcrumb */}
+      <nav style={{ background: "#fff", padding: "14px 24px", borderBottom: "1px solid #e2e6ed", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Logo />
-          <span style={{ fontSize: 15, fontWeight: 600, color: "#162233" }}>KCS Code Challenge</span>
+          <Link href="/teacher/admin" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Competitions</Link>
+          <span style={{ color: "#cbd5e1", fontSize: 12 }}>/</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#162233" }}>{selectedComp?.name ?? "Select a competition"}</span>
+          {selectedComp && (
+            <span style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: selectedComp.active ? "#16a34a" : "#dc2626", background: selectedComp.active ? "#f0fdf4" : "#fef2f2", border: `1px solid ${selectedComp.active ? "#bbf7d0" : "#fecaca"}`, borderRadius: 10, padding: "2px 8px" }}>
+              {selectedComp.active ? "Active" : "Closed"}
+            </span>
+          )}
+          {winner && (
+            <span style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "#b45309", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "2px 8px" }}>
+              ★ Winner
+            </span>
+          )}
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Link href="/teacher/admin" style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 13, padding: "8px 16px", borderRadius: 4, textDecoration: "none" }}>
-            Admin
-          </Link>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* Competition switcher (kept for quick-switching) */}
+          {allComps.length > 1 && (
+            <form method="GET" action="/teacher/dashboard" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <select name="comp" defaultValue={selectedComp?.id ?? ""} style={{ fontSize: 12, color: "#475569", border: "1px solid #d1d5db", borderRadius: 4, padding: "5px 8px", background: "#fff" }}>
+                {allComps.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}{c.active ? "" : " (closed)"}</option>
+                ))}
+              </select>
+              <button type="submit" style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 12, padding: "5px 10px", borderRadius: 4, cursor: "pointer" }}>Switch</button>
+            </form>
+          )}
           <form action="/api/teacher/logout" method="POST">
-            <button style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 13, padding: "8px 16px", borderRadius: 4, cursor: "pointer" }}>
-              Sign out
-            </button>
+            <button style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 13, padding: "7px 14px", borderRadius: 4, cursor: "pointer" }}>Sign out</button>
           </form>
         </div>
       </nav>
 
-      {/* Competition selector */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e2e6ed", padding: "12px 24px", display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: 13, color: "#475569", fontWeight: 500 }}>Competition:</span>
-        <form method="GET" action="/teacher/dashboard" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <select name="comp" defaultValue={selectedComp?.id ?? ""} style={{ fontSize: 13, color: "#162233", border: "1px solid #d1d5db", borderRadius: 4, padding: "6px 10px", background: "#fff", cursor: "pointer" }}>
-            {allComps.map(c => (
-              <option key={c.id} value={c.id}>{c.name}{c.active ? " (active)" : " (closed)"}</option>
-            ))}
-          </select>
-          <button type="submit" style={{ background: "#f7f8fa", border: "1px solid #d1d5db", color: "#475569", fontSize: 12, padding: "6px 12px", borderRadius: 4, cursor: "pointer" }}>View</button>
-        </form>
-        {selectedComp && (
-          <span style={{ fontSize: 12, color: selectedComp.active ? "#16a34a" : "#94a3b8", background: selectedComp.active ? "#f0fdf4" : "#f1f5f9", border: `1px solid ${selectedComp.active ? "#bbf7d0" : "#e2e6ed"}`, borderRadius: 10, padding: "2px 8px", fontWeight: 500 }}>
-            {selectedComp.active ? "Active" : "Closed"}
+      {/* Section tabs */}
+      <div style={{ background: "#fff", padding: "0 24px", borderBottom: "1px solid #e2e6ed", display: "flex", gap: 24 }}>
+        {[
+          { key: "submissions", label: "Submissions", active: true },
+          { key: "codes", label: "Access codes", active: false },
+        ].map(t => (
+          <span key={t.key} style={{
+            fontSize: 13,
+            fontWeight: t.active ? 500 : 400,
+            color: t.active ? "#2558d4" : "#64748b",
+            padding: "12px 0",
+            borderBottom: `2px solid ${t.active ? "#2558d4" : "transparent"}`,
+            marginBottom: -1,
+          }}>
+            {t.label}
           </span>
-        )}
-        {selectedComp && (
-          <span style={{ fontSize: 12, color: "#64748b" }}>Deadline: {new Date(selectedComp.deadline).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
-        )}
+        ))}
       </div>
 
       {/* Stats strip */}
       <div style={{ background: "#fff", borderBottom: "1px solid #e2e6ed", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
         {[
-          { label: "Submissions", value: rows.length },
-          { label: "Shortlisted", value: shortlisted.length },
-          { label: "Codes used", value: `${codes.filter(c => c.usedAt).length} / ${codes.length}` },
-          { label: "Winner", value: winner ? (winner.studentName ?? "—") : "—", small: true },
+          { label: "Submissions", value: `${rows.length}`, suffix: ` / ${codes.length}` },
+          { label: "Shortlisted", value: `${shortlisted.length}` },
+          { label: "Winner", value: winner ? (winner.pseudonym ?? winner.studentName ?? "—") : "Not yet declared", small: true },
+          { label: selectedComp?.active ? "Closes" : "Closed", value: selectedComp ? new Date(selectedComp.deadline).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—", small: true },
         ].map((s, i) => (
           <div key={s.label} style={{ padding: "18px 24px", borderRight: i < 3 ? "1px solid #e2e6ed" : undefined }}>
             <div style={{ fontSize: 10, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.08em", marginBottom: 7 }}>{s.label}</div>
-            <div style={{ fontSize: s.small || typeof s.value === "string" && s.value.length > 4 ? 14 : 22, fontWeight: 600, color: "#162233" }}>{s.value}</div>
+            <div style={{ fontSize: s.small ? 14 : 20, fontWeight: 600, color: "#162233" }}>
+              {s.value}
+              {s.suffix && <span style={{ fontSize: 12, fontWeight: 400, color: "#94a3b8" }}>{s.suffix}</span>}
+            </div>
           </div>
         ))}
       </div>
