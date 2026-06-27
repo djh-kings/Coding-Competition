@@ -94,7 +94,12 @@ export default async function LandingPage() {
                     </span>
                   </div>
                   <h3 style={{ fontSize: 18, fontWeight: 600, color: "#162233", margin: 0, marginBottom: 6 }}>{c.name}</h3>
-                  <p style={{ fontSize: 13, color: "#64748b", margin: 0, lineHeight: 1.5 }}>
+                  {c.description && (
+                    <p style={{ fontSize: 13, color: "#475569", margin: 0, marginBottom: 6, lineHeight: 1.55 }}>
+                      {c.description}
+                    </p>
+                  )}
+                  <p style={{ fontSize: 12, color: "#94a3b8", margin: 0, lineHeight: 1.5 }}>
                     Closes {new Date(c.deadline).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>

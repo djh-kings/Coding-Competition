@@ -55,6 +55,11 @@ async function migrate() {
   } catch {
     // Column already exists — fine
   }
+  try {
+    await client.execute("ALTER TABLE competitions ADD COLUMN description TEXT");
+  } catch {
+    // Column already exists — fine
+  }
 
   console.log("✓ Tables created");
 }

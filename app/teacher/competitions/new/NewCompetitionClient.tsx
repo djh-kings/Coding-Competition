@@ -26,6 +26,7 @@ const labelStyle: React.CSSProperties = {
 export function NewCompetitionClient() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("17:00");
   const [problemHtml, setProblemHtml] = useState("<h3>Problem title</h3>\n<p>Describe the problem here.</p>");
@@ -46,7 +47,7 @@ export function NewCompetitionClient() {
       const res = await fetch("/api/teacher/competitions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, deadline, problemHtml, testCases: [], codeCount }),
+        body: JSON.stringify({ name, description, deadline, problemHtml, testCases: [], codeCount }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -100,6 +101,19 @@ export function NewCompetitionClient() {
         <div style={{ marginBottom: 24 }}>
           <label style={labelStyle}>Competition name</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. The Fibonacci Cipher" style={{ ...inputStyle, width: "100%" }} />
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <label style={labelStyle}>Short description <span style={{ color: "#94a3b8", fontWeight: 400 }}>— shown on the landing page card</span></label>
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="e.g. A two-hour cryptography challenge for Years 10–13. Decode the cipher and find the hidden message."
+            rows={2}
+            maxLength={240}
+            style={{ ...inputStyle, width: "100%", resize: "vertical", lineHeight: 1.5 }}
+          />
+          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{description.length}/240 characters</p>
         </div>
 
         <div style={{ marginBottom: 24 }}>

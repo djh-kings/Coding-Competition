@@ -11,6 +11,7 @@ export const teachers = sqliteTable("teachers", {
 export const competitions = sqliteTable("competitions", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  description: text("description"),
   deadline: text("deadline").notNull(),
   problemHtml: text("problem_html").notNull(),
   testCases: text("test_cases").notNull(), // JSON string

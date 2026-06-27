@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json() as {
     name: string;
+    description?: string;
     deadline: string;
     problemHtml: string;
     testCases: TestCase[];
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
   await db.insert(competitions).values({
     id: competitionId,
     name: body.name,
+    description: body.description?.trim().slice(0, 240) || null,
     deadline: body.deadline,
     problemHtml: body.problemHtml,
     testCases: JSON.stringify(body.testCases ?? []),
