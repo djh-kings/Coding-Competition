@@ -16,6 +16,7 @@ export const competitions = sqliteTable("competitions", {
   problemHtml: text("problem_html").notNull(),
   testCases: text("test_cases").notNull(), // JSON string
   active: integer("active", { mode: "boolean" }).default(true),
+  listed: integer("listed", { mode: "boolean" }).default(true),
   teacherId: text("teacher_id")
     .notNull()
     .references(() => teachers.id),

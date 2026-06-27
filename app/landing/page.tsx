@@ -18,10 +18,12 @@ function fmtCountdown(deadlineIso: string) {
 }
 
 export default async function LandingPage() {
-  const rawComps = await db
+  const allActive = await db
     .select()
     .from(competitions)
     .where(eq(competitions.active, true));
+  // Treat NULL listed as listed (back-compat for pre-migration rows)
+  const rawComps = allActive.filter(c => c.listed !== false);
 
   // Open competitions first (soonest deadline → latest), then closed (most recently closed first)
   const now = Date.now();

@@ -6,6 +6,7 @@ import { competitions, submissions, accessCodes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
 import { DeleteCompetitionButton } from "./DeleteCompetitionButton";
+import { ListedToggleButton } from "./ListedToggleButton";
 
 export const dynamic = "force-dynamic";
 
@@ -122,6 +123,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                       }}>
                         {c.active ? "Active" : "Closed"}
                       </span>
+                      {c.listed === false && (
+                        <span style={{ fontSize: 11, fontWeight: 500, borderRadius: 10, padding: "2px 8px", background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e6ed" }}>
+                          Hidden from landing
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: 12, color: "#64748b" }}>
                       Deadline: {new Date(c.deadline).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -147,6 +153,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                         </button>
                       </form>
                     )}
+                    <ListedToggleButton id={c.id} listed={c.listed ?? true} />
                     <DeleteCompetitionButton id={c.id} name={c.name} subCount={c.subCount} />
                   </div>
                 </div>
