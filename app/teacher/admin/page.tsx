@@ -47,7 +47,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <nav style={{ background: "#fff", padding: "0 24px", borderBottom: "1px solid #e2e6ed", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Logo />
-          <span style={{ fontSize: 15, fontWeight: 600, color: "#162233" }}>Admin</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: "#162233" }}>All competitions</span>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <Link href="/teacher/dashboard" style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 13, padding: "8px 16px", borderRadius: 4, textDecoration: "none" }}>

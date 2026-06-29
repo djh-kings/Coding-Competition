@@ -8,14 +8,26 @@ import { Logo } from "@/components/Logo";
 import { GenerateCodesForm } from "./GenerateCodesForm";
 import { SubmissionList, type SubRow } from "./SubmissionList";
 import { PhaseBanner } from "./PhaseBanner";
+import { ListedToggleButton } from "../admin/ListedToggleButton";
+import { DeleteCompetitionButton } from "../admin/DeleteCompetitionButton";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ comp?: string }> }) {
+type Tab = "overview" | "submissions" | "codes" | "settings";
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: "overview", label: "Overview" },
+  { key: "submissions", label: "Submissions" },
+  { key: "codes", label: "Access codes" },
+  { key: "settings", label: "Settings" },
+];
+
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ comp?: string; tab?: string }> }) {
   const session = await getTeacherSession();
   if (!session) redirect("/teacher/login");
 
-  const { comp: selectedCompId } = await searchParams;
+  const { comp: selectedCompId, tab: tabParam } = await searchParams;
+  const tab: Tab = (TABS.find(t => t.key === tabParam)?.key ?? "overview") as Tab;
 
   const allComps = await db.select().from(competitions).orderBy(desc(competitions.createdAt));
   const activeComp = allComps.find(c => c.active) ?? null;
@@ -47,6 +59,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const shortlisted = rows.filter(r => r.shortlisted);
   const winner = rows.find(r => r.winner);
+  const inferredPrefix = (() => {
+    const prefixes = new Set(codes.map(c => c.code.includes("-") ? c.code.split("-")[0] : ""));
+    return prefixes.size === 1 ? [...prefixes][0] || undefined : undefined;
+  })();
+  const tabHref = (t: Tab) => `/teacher/dashboard?comp=${selectedComp?.id ?? ""}&tab=${t}`;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f7f8fa" }}>
@@ -69,7 +86,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           )}
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {/* Competition switcher (kept for quick-switching) */}
           {allComps.length > 1 && (
             <form method="GET" action="/teacher/dashboard" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <select name="comp" defaultValue={selectedComp?.id ?? ""} style={{ fontSize: 12, color: "#475569", border: "1px solid #d1d5db", borderRadius: 4, padding: "5px 8px", background: "#fff" }}>
@@ -77,6 +93,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   <option key={c.id} value={c.id}>{c.name}{c.active ? "" : " (closed)"}</option>
                 ))}
               </select>
+              <input type="hidden" name="tab" value={tab} />
               <button type="submit" style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 12, padding: "5px 10px", borderRadius: 4, cursor: "pointer" }}>Switch</button>
             </form>
           )}
@@ -88,85 +105,165 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* Section tabs */}
       <div style={{ background: "#fff", padding: "0 24px", borderBottom: "1px solid #e2e6ed", display: "flex", gap: 24 }}>
-        {[
-          { key: "submissions", label: "Submissions", active: true },
-          { key: "codes", label: "Access codes", active: false },
-        ].map(t => (
-          <span key={t.key} style={{
-            fontSize: 13,
-            fontWeight: t.active ? 500 : 400,
-            color: t.active ? "#2558d4" : "#64748b",
-            padding: "12px 0",
-            borderBottom: `2px solid ${t.active ? "#2558d4" : "transparent"}`,
-            marginBottom: -1,
-          }}>
-            {t.label}
-          </span>
-        ))}
+        {TABS.map(t => {
+          const isActive = t.key === tab;
+          return (
+            <Link key={t.key} href={tabHref(t.key)} style={{
+              fontSize: 13,
+              fontWeight: isActive ? 500 : 400,
+              color: isActive ? "#2558d4" : "#64748b",
+              padding: "12px 0",
+              borderBottom: `2px solid ${isActive ? "#2558d4" : "transparent"}`,
+              marginBottom: -1,
+              textDecoration: "none",
+            }}>
+              {t.label}
+            </Link>
+          );
+        })}
       </div>
 
-      {/* Phase banner: what should the teacher do next? */}
-      {selectedComp && (
-        <PhaseBanner
-          comp={selectedComp}
-          counts={{
-            submissionCount: rows.length,
-            codeCount: codes.length,
-            shortlistedCount: shortlisted.length,
-            hasWinner: !!winner,
-          }}
-        />
-      )}
-
-      {/* Stats strip */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e2e6ed", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
-        {[
-          { label: "Submissions", value: `${rows.length}`, suffix: ` / ${codes.length}` },
-          { label: "Shortlisted", value: `${shortlisted.length}` },
-          { label: "Winner", value: winner ? (winner.pseudonym ?? winner.studentName ?? "—") : "Not yet declared", small: true },
-          { label: selectedComp?.active ? "Closes" : "Closed", value: selectedComp ? new Date(selectedComp.deadline).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—", small: true },
-        ].map((s, i) => (
-          <div key={s.label} style={{ padding: "18px 24px", borderRight: i < 3 ? "1px solid #e2e6ed" : undefined }}>
-            <div style={{ fontSize: 10, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.08em", marginBottom: 7 }}>{s.label}</div>
-            <div style={{ fontSize: s.small ? 14 : 20, fontWeight: 600, color: "#162233" }}>
-              {s.value}
-              {s.suffix && <span style={{ fontSize: 12, fontWeight: 400, color: "#94a3b8" }}>{s.suffix}</span>}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Submissions table */}
-      <SubmissionList rows={subRows} />
-
-      {/* Access codes */}
-      {selectedComp && (
-        <div style={{ margin: "0 24px 24px", background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 1px 4px rgba(0,0,0,.08)", padding: "20px 24px" }}>
-          <div style={{ marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em" }}>
-              Access Codes — {codes.filter(c => !c.usedAt).length} unused / {codes.length} total
-            </span>
-            <GenerateCodesForm competitionId={selectedComp.id} prefix={(() => {
-              // Infer prefix from existing codes: take chars before the first "-" if all codes agree
-              const prefixes = new Set(codes.map(c => c.code.includes("-") ? c.code.split("-")[0] : ""));
-              return prefixes.size === 1 ? [...prefixes][0] || undefined : undefined;
-            })()} />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
-            {codes.map(c => (
-              <div key={c.id} style={{
-                padding: "7px 10px", borderRadius: 3, textAlign: "center",
-                background: c.usedAt ? "#f0fdf4" : "#f7f8fa",
-                border: `1px solid ${c.usedAt ? "#bbf7d0" : "#e2e6ed"}`,
-                fontFamily: "var(--font-mono)", fontSize: 13, color: c.usedAt ? "#15803d" : "#162233",
-              }}>
-                {c.code}
-                {c.usedAt && <div style={{ fontSize: 10, color: "#16a34a", marginTop: 2 }}>{c.studentName ?? "used"}</div>}
+      {/* Tab content */}
+      {!selectedComp ? (
+        <div style={{ padding: "60px 24px", textAlign: "center", color: "#94a3b8", fontSize: 14 }}>No competition selected.</div>
+      ) : tab === "overview" ? (
+        <>
+          <PhaseBanner comp={selectedComp} counts={{ submissionCount: rows.length, codeCount: codes.length, shortlistedCount: shortlisted.length, hasWinner: !!winner }} />
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e6ed", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
+            {[
+              { label: "Submissions", value: `${rows.length}`, suffix: ` / ${codes.length}` },
+              { label: "Shortlisted", value: `${shortlisted.length}` },
+              { label: "Winner", value: winner ? (winner.pseudonym ?? winner.studentName ?? "—") : "Not yet declared", small: true },
+              { label: selectedComp.active ? "Closes" : "Closed", value: new Date(selectedComp.deadline).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }), small: true },
+            ].map((s, i) => (
+              <div key={s.label} style={{ padding: "18px 24px", borderRight: i < 3 ? "1px solid #e2e6ed" : undefined }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.08em", marginBottom: 7 }}>{s.label}</div>
+                <div style={{ fontSize: s.small ? 14 : 20, fontWeight: 600, color: "#162233" }}>
+                  {s.value}
+                  {s.suffix && <span style={{ fontSize: 12, fontWeight: 400, color: "#94a3b8" }}>{s.suffix}</span>}
+                </div>
               </div>
             ))}
           </div>
+
+          {/* Recent activity teaser */}
+          <div style={{ margin: "24px", background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 1px 4px rgba(0,0,0,.08)" }}>
+            <div style={{ padding: "14px 24px", borderBottom: "1px solid #e2e6ed", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em" }}>
+                Recent submissions
+              </span>
+              <Link href={tabHref("submissions")} style={{ fontSize: 13, color: "#2558d4", textDecoration: "none" }}>See all →</Link>
+            </div>
+            {subRows.length === 0 ? (
+              <div style={{ padding: "32px 24px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No submissions yet.</div>
+            ) : (
+              subRows.slice(0, 5).map(row => (
+                <Link key={row.id} href={`/teacher/submissions/${row.id}`} style={{
+                  display: "grid", gridTemplateColumns: "2fr 1.4fr 1.4fr 90px", padding: "12px 24px",
+                  borderBottom: "1px solid #f0f2f5", textDecoration: "none",
+                  background: row.winner ? "#f0fdf4" : row.shortlisted ? "#fffbeb" : "#fff",
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "#162233" }}>
+                    {row.pseudonym ? `${row.pseudonym} (${row.studentName ?? "—"})` : (row.studentName ?? "—")}
+                  </span>
+                  <span style={{ fontSize: 13, color: "#64748b" }}>
+                    {row.submittedAt ? new Date(row.submittedAt).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" }) : "—"}
+                  </span>
+                  <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "#475569" }}>{row.accessCode}</span>
+                  <span style={{ fontSize: 13, color: row.winner ? "#16a34a" : row.shortlisted ? "#b45309" : "#94a3b8", fontWeight: row.winner || row.shortlisted ? 500 : 400 }}>
+                    {row.winner ? "🏆 Winner" : row.shortlisted ? "★ Shortlisted" : "—"}
+                  </span>
+                </Link>
+              ))
+            )}
+          </div>
+        </>
+      ) : tab === "submissions" ? (
+        <SubmissionList rows={subRows} />
+      ) : tab === "codes" ? (
+        <div style={{ margin: "24px", background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 1px 4px rgba(0,0,0,.08)", padding: "20px 24px" }}>
+          <div style={{ marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em" }}>
+              Access codes — {codes.filter(c => !c.usedAt).length} unused / {codes.length} total
+            </span>
+            <GenerateCodesForm competitionId={selectedComp.id} prefix={inferredPrefix} />
+          </div>
+          {codes.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#94a3b8" }}>No codes yet — generate some above.</p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
+              {codes.map(c => (
+                <div key={c.id} style={{
+                  padding: "7px 10px", borderRadius: 3, textAlign: "center",
+                  background: c.usedAt ? "#f0fdf4" : "#f7f8fa",
+                  border: `1px solid ${c.usedAt ? "#bbf7d0" : "#e2e6ed"}`,
+                  fontFamily: "var(--font-mono)", fontSize: 13, color: c.usedAt ? "#15803d" : "#162233",
+                }}>
+                  {c.code}
+                  {c.usedAt && <div style={{ fontSize: 10, color: "#16a34a", marginTop: 2 }}>{c.studentName ?? "used"}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        // Settings tab
+        <div style={{ margin: "24px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <SettingsRow title="Edit competition" description="Change name, description, deadline, or problem statement.">
+            <Link href={`/teacher/competitions/${selectedComp.id}/edit`} style={settingsBtn}>Edit</Link>
+          </SettingsRow>
+
+          <SettingsRow title="Status" description={selectedComp.active ? "Currently accepting submissions." : "Closed — no new submissions accepted."}>
+            {selectedComp.active ? (
+              <form action={`/api/teacher/competitions/${selectedComp.id}/close`} method="POST">
+                <button type="submit" style={{ ...settingsBtn, borderColor: "#fca5a5", color: "#dc2626" }}>Close competition</button>
+              </form>
+            ) : (
+              <form action={`/api/teacher/competitions/${selectedComp.id}/activate`} method="POST">
+                <button type="submit" style={{ ...settingsBtn, borderColor: "#bbf7d0", color: "#16a34a" }}>Reopen</button>
+              </form>
+            )}
+          </SettingsRow>
+
+          <SettingsRow title="Landing page visibility" description="Hide the competition card from the public landing page without closing it.">
+            <ListedToggleButton id={selectedComp.id} listed={selectedComp.listed ?? true} />
+          </SettingsRow>
+
+          <SettingsRow title="Duplicate" description="Create a new competition pre-filled with this one's name, description, and problem.">
+            <Link href={`/teacher/competitions/new?from=${selectedComp.id}`} style={settingsBtn}>Duplicate</Link>
+          </SettingsRow>
+
+          <SettingsRow title="Delete" description={`Permanently remove this competition${rows.length ? ` and its ${rows.length} submission${rows.length === 1 ? "" : "s"}` : ""}. This cannot be undone.`} danger>
+            <DeleteCompetitionButton id={selectedComp.id} name={selectedComp.name} subCount={rows.length} />
+          </SettingsRow>
         </div>
       )}
+    </div>
+  );
+}
+
+const settingsBtn: React.CSSProperties = {
+  background: "#fff", border: "1px solid #d1d5db", color: "#475569",
+  fontSize: 13, fontWeight: 500, padding: "8px 16px", borderRadius: 4, textDecoration: "none", cursor: "pointer",
+};
+
+function SettingsRow({ title, description, danger, children }: { title: string; description: string; danger?: boolean; children: React.ReactNode }) {
+  return (
+    <div style={{
+      background: "#fff",
+      border: `1px solid ${danger ? "#fecaca" : "#e2e6ed"}`,
+      borderRadius: 4,
+      padding: "18px 24px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 16,
+    }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: danger ? "#dc2626" : "#162233", marginBottom: 4 }}>{title}</div>
+        <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>{description}</div>
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>{children}</div>
     </div>
   );
 }
