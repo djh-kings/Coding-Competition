@@ -7,6 +7,7 @@ import { eq, desc } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
 import { GenerateCodesForm } from "./GenerateCodesForm";
 import { SubmissionList, type SubRow } from "./SubmissionList";
+import { PhaseBanner } from "./PhaseBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,19 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </span>
         ))}
       </div>
+
+      {/* Phase banner: what should the teacher do next? */}
+      {selectedComp && (
+        <PhaseBanner
+          comp={selectedComp}
+          counts={{
+            submissionCount: rows.length,
+            codeCount: codes.length,
+            shortlistedCount: shortlisted.length,
+            hasWinner: !!winner,
+          }}
+        />
+      )}
 
       {/* Stats strip */}
       <div style={{ background: "#fff", borderBottom: "1px solid #e2e6ed", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
