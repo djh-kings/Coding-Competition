@@ -23,13 +23,16 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 8,
 };
 
-export function NewCompetitionClient() {
+interface Preset { name: string; description: string; problemHtml: string; }
+
+export function NewCompetitionClient({ preset }: { preset?: Preset | null }) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState(preset?.name ?? "");
+  const [description, setDescription] = useState(preset?.description ?? "");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("17:00");
-  const [problemHtml, setProblemHtml] = useState("<h3>Problem title</h3>\n<p>Describe the problem here.</p>");
+  const [problemHtml, setProblemHtml] = useState(preset?.problemHtml ?? "<h3>Problem title</h3>\n<p>Describe the problem here.</p>");
+  const [codePrefix, setCodePrefix] = useState("");
   const [codeCount, setCodeCount] = useState(20);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -47,7 +50,7 @@ export function NewCompetitionClient() {
       const res = await fetch("/api/teacher/competitions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, deadline, problemHtml, testCases: [], codeCount }),
+        body: JSON.stringify({ name, description, deadline, problemHtml, testCases: [], codeCount, codePrefix: codePrefix.trim().toUpperCase() }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -139,12 +142,26 @@ export function NewCompetitionClient() {
 
         <div style={{ marginBottom: 24 }}>
           <label style={labelStyle}>Student access codes</label>
-          <p style={{ fontSize: 13, color: "#475569", display: "flex", alignItems: "center", gap: 8 }}>
-            Generate
-            <input type="number" min={1} max={200} value={codeCount} onChange={e => setCodeCount(Number(e.target.value))} style={{ ...inputStyle, width: 72, textAlign: "center", padding: "6px 8px", fontSize: 14 }} />
-            unique codes.
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, color: "#475569" }}>Class prefix</span>
+              <input
+                type="text"
+                value={codePrefix}
+                onChange={e => setCodePrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6))}
+                placeholder="e.g. L4CS1"
+                style={{ ...inputStyle, width: 110, padding: "6px 10px", fontSize: 14, fontFamily: "var(--font-mono)" }}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, color: "#475569" }}>Generate</span>
+              <input type="number" min={1} max={200} value={codeCount} onChange={e => setCodeCount(Number(e.target.value))} style={{ ...inputStyle, width: 72, textAlign: "center", padding: "6px 8px", fontSize: 14 }} />
+              <span style={{ fontSize: 13, color: "#475569" }}>codes</span>
+            </div>
+          </div>
+          <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>
+            Codes will look like <span style={{ fontFamily: "var(--font-mono)" }}>{codePrefix ? `${codePrefix}-ABC123` : "ABC123"}</span>. Each is single-use.
           </p>
-          <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>Each code is single-use and tied to one student.</p>
         </div>
 
         {error && <p style={{ fontSize: 13, color: "#dc2626", marginBottom: 16 }}>{error}</p>}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function GenerateCodesForm({ competitionId }: { competitionId: string }) {
+export function GenerateCodesForm({ competitionId, prefix }: { competitionId: string; prefix?: string }) {
   const [count, setCount] = useState(5);
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<string[] | null>(null);
@@ -12,7 +12,7 @@ export function GenerateCodesForm({ competitionId }: { competitionId: string }) 
     const res = await fetch(`/api/teacher/competitions/${competitionId}/codes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ count }),
+      body: JSON.stringify({ count, prefix }),
     });
     const data = await res.json();
     setBusy(false);

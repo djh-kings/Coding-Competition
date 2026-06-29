@@ -16,15 +16,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const { id: competitionId } = await params;
-  const { count } = await req.json() as { count: number };
+  const { count, prefix: rawPrefix } = await req.json() as { count: number; prefix?: string };
   const n = Math.min(Math.max(Math.floor(count ?? 0), 1), 200);
+  const prefix = (rawPrefix ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
 
   const created: string[] = [];
   const seen = new Set<string>();
   let attempts = 0;
   while (created.length < n && attempts < n * 10) {
     attempts++;
-    const code = generateCode();
+    const random = generateCode();
+    const code = prefix ? `${prefix}-${random}` : random;
     if (seen.has(code)) continue;
     seen.add(code);
     try {

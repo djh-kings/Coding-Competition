@@ -148,7 +148,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <span style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em" }}>
               Access Codes — {codes.filter(c => !c.usedAt).length} unused / {codes.length} total
             </span>
-            <GenerateCodesForm competitionId={selectedComp.id} />
+            <GenerateCodesForm competitionId={selectedComp.id} prefix={(() => {
+              // Infer prefix from existing codes: take chars before the first "-" if all codes agree
+              const prefixes = new Set(codes.map(c => c.code.includes("-") ? c.code.split("-")[0] : ""));
+              return prefixes.size === 1 ? [...prefixes][0] || undefined : undefined;
+            })()} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
             {codes.map(c => (

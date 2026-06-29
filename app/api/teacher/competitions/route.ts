@@ -26,7 +26,9 @@ export async function POST(req: NextRequest) {
     problemHtml: string;
     testCases: TestCase[];
     codeCount: number;
+    codePrefix?: string;
   };
+  const prefix = (body.codePrefix ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
 
   if (!body.name || !body.deadline || !body.problemHtml) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -48,7 +50,8 @@ export async function POST(req: NextRequest) {
   const count = Math.min(Math.max(body.codeCount ?? 10, 1), 200);
   const seen = new Set<string>();
   while (codes.length < count) {
-    const code = generateCode();
+    const random = generateCode();
+    const code = prefix ? `${prefix}-${random}` : random;
     if (seen.has(code)) continue;
     seen.add(code);
     try {
