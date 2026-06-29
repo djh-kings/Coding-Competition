@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { submissions, competitions, accessCodes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
+import { GenerateCodesForm } from "./GenerateCodesForm";
 
 export const dynamic = "force-dynamic";
 
@@ -141,12 +142,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </div>
 
       {/* Access codes */}
-      {codes.length > 0 && (
+      {selectedComp && (
         <div style={{ margin: "0 24px 24px", background: "#fff", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 1px 4px rgba(0,0,0,.08)", padding: "20px 24px" }}>
-          <div style={{ marginBottom: 14 }}>
+          <div style={{ marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <span style={{ fontSize: 12, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em" }}>
               Access Codes — {codes.filter(c => !c.usedAt).length} unused / {codes.length} total
             </span>
+            <GenerateCodesForm competitionId={selectedComp.id} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
             {codes.map(c => (
