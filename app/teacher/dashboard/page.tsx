@@ -6,6 +6,7 @@ import { submissions, competitions, accessCodes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
 import { GenerateCodesForm } from "./GenerateCodesForm";
+import { SubmissionList, type SubRow } from "./SubmissionList";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const codes = selectedComp
     ? await db.select().from(accessCodes).where(eq(accessCodes.competitionId, selectedComp.id))
     : [];
+
+  const codeById = new Map(codes.map(c => [c.id, c.code] as const));
+  const subRows: SubRow[] = rows.map(r => ({
+    id: r.id,
+    studentName: r.studentName,
+    pseudonym: r.pseudonym ?? null,
+    accessCode: codeById.get(r.accessCodeId) ?? "—",
+    submittedAt: r.submittedAt,
+    confirmationCode: r.confirmationCode,
+    shortlisted: r.shortlisted,
+    winner: r.winner,
+    lines: r.code.split("\n").length,
+    language: r.language,
+  }));
 
   const shortlisted = rows.filter(r => r.shortlisted);
   const winner = rows.find(r => r.winner);
@@ -108,38 +123,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </div>
 
       {/* Submissions table */}
-      <div style={{ background: "#fff", margin: "24px", borderRadius: 4, border: "1px solid #e2e6ed", boxShadow: "0 1px 4px rgba(0,0,0,.08)" }}>
-        <div style={{ background: "#f7f8fa", padding: "10px 24px", borderBottom: "1px solid #e2e6ed", display: "grid", gridTemplateColumns: "2fr 1.4fr 1.6fr 110px 90px" }}>
-          {["Student", "Submitted", "Confirmation code", "Shortlisted", "Winner"].map(h => (
-            <span key={h} style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em" }}>{h}</span>
-          ))}
-        </div>
-
-        {rows.length === 0 ? (
-          <div style={{ padding: "32px 24px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No submissions yet.</div>
-        ) : (
-          rows.map(row => (
-            <Link key={row.id} href={`/teacher/submissions/${row.id}`} style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1.4fr 1.6fr 110px 90px",
-              padding: "13px 24px",
-              borderBottom: "1px solid #f0f2f5",
-              textDecoration: "none",
-              background: row.winner ? "#f0fdf4" : row.shortlisted ? "#fffbeb" : "#fff",
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#162233" }}>
-                {row.pseudonym ? `${row.pseudonym} (${row.studentName ?? "—"})` : (row.studentName ?? "—")}
-              </span>
-              <span style={{ fontSize: 13, color: "#64748b" }}>{new Date(row.submittedAt ?? "").toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}</span>
-              <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "#64748b" }}>{row.confirmationCode}</span>
-              <span style={{ fontSize: 13, fontWeight: row.shortlisted ? 500 : 400, color: row.shortlisted ? "#b45309" : "#94a3b8" }}>
-                {row.shortlisted ? "★ Yes" : "No"}
-              </span>
-              <span style={{ fontSize: 13, color: row.winner ? "#16a34a" : "#94a3b8", fontWeight: row.winner ? 600 : 400 }}>{row.winner ? "🏆 Yes" : "—"}</span>
-            </Link>
-          ))
-        )}
-      </div>
+      <SubmissionList rows={subRows} />
 
       {/* Access codes */}
       {selectedComp && (
