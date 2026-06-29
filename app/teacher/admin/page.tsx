@@ -140,6 +140,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     >
                       View submissions
                     </Link>
+                    <Link
+                      href={`/teacher/competitions/${c.id}/edit`}
+                      style={{ background: "#f7f8fa", border: "1px solid #d1d5db", color: "#475569", fontSize: 12, padding: "6px 12px", borderRadius: 4, textDecoration: "none" }}
+                    >
+                      Edit
+                    </Link>
                     {c.active ? (
                       <form action={`/api/teacher/competitions/${c.id}/close`} method="POST">
                         <button type="submit" style={{ background: "#fff", border: "1px solid #fca5a5", color: "#dc2626", fontSize: 12, padding: "6px 12px", borderRadius: 4, cursor: "pointer" }}>
