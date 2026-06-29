@@ -382,7 +382,7 @@ export function WorkspaceClient() {
             </div>
             <h2 style={{ fontSize: 19, fontWeight: 600, color: "#162233", marginBottom: 8 }}>Submission received!</h2>
             <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>
-              Write down your confirmation code — you will need it to claim your prize if you win.
+              Write down your confirmation code. Use it later at <strong style={{ color: "#162233" }}>/results</strong> to check whether you&apos;ve been shortlisted or won.
             </p>
             <p style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em", marginBottom: 8 }}>Your confirmation code</p>
             <div style={{ display: "flex", borderRadius: 4, overflow: "hidden", border: "2px solid #2558d4", marginBottom: 24 }}>

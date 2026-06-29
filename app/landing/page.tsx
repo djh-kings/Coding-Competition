@@ -60,7 +60,10 @@ export default async function LandingPage() {
             <Link href="/student/login" style={{ background: "#2558d4", color: "#fff", fontSize: 14, fontWeight: 500, padding: "13px 28px", borderRadius: 4, textDecoration: "none" }}>Enter competition code</Link>
           </div>
         </main>
-        <footer style={{ padding: "16px 32px", borderTop: "1px solid #e2e6ed", textAlign: "center", fontSize: 12, color: "#94a3b8" }}>© 2026 KCS Code Challenge. All rights reserved.</footer>
+        <footer style={{ padding: "16px 32px", borderTop: "1px solid #e2e6ed", textAlign: "center", fontSize: 12, color: "#94a3b8" }}>
+          <Link href="/results" style={{ color: "#2558d4", textDecoration: "none", marginRight: 12 }}>Check your result →</Link>
+          © 2026 KCS Code Challenge
+        </footer>
       </div>
     );
   }
@@ -157,6 +160,7 @@ export default async function LandingPage() {
       </main>
 
       <footer style={{ padding: "16px 32px", borderTop: "1px solid #e2e6ed", textAlign: "center", fontSize: 12, color: "#94a3b8" }}>
+        <Link href="/results" style={{ color: "#2558d4", textDecoration: "none", marginRight: 12 }}>Check your result →</Link>
         {activeComps.length} competitions open · © 2026 KCS Code Challenge
       </footer>
     </div>
