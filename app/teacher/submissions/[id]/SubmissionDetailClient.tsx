@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { runWithTests, type RunOutput } from "@/lib/runner";
+
+type TermLine =
+  | { kind: "out"; text: string }
+  | { kind: "err"; text: string }
+  | { kind: "info"; text: string }
+  | { kind: "input_echo"; text: string };
 
 const CodeEditor = dynamic(() => import("@/components/CodeEditor").then(m => ({ default: m.CodeEditor })), { ssr: false });
 
@@ -24,11 +29,30 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
   const [winner, setWinner] = useState(submission.winner ?? false);
   const [comment, setComment] = useState(submission.comment ?? "");
   const [commentSaved, setCommentSaved] = useState(false);
-  const [runOutput, setRunOutput] = useState<RunOutput | null>(null);
+  const [lines, setLines] = useState<TermLine[]>([{ kind: "info", text: "Press Run to execute this submission" }]);
   const [running, setRunning] = useState(false);
-  const [stdin, setStdin] = useState("");
+  const [waitingInput, setWaitingInput] = useState(false);
+  const [inputVal, setInputVal] = useState("");
   const [confirmWinner, setConfirmWinner] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const termRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const controlBufRef = useRef<SharedArrayBuffer | null>(null);
+  const dataBufRef = useRef<SharedArrayBuffer | null>(null);
+
+  useEffect(() => {
+    if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight;
+  }, [lines, waitingInput]);
+
+  useEffect(() => {
+    if (waitingInput && inputRef.current) inputRef.current.focus();
+  }, [waitingInput]);
+
+  const appendLine = useCallback((line: TermLine) => {
+    setLines(prev => [...prev, line]);
+  }, []);
 
   async function patch(body: object) {
     await fetch(`/api/teacher/submissions/${submission.id}`, {
@@ -56,16 +80,81 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
     setTimeout(() => setCommentSaved(false), 2000);
   }
 
-  async function handleRun() {
+  function handleRun() {
+    if (running) return;
+    if (workerRef.current) { workerRef.current.terminate(); workerRef.current = null; }
+
+    setLines(prev => [...prev, { kind: "info", text: "─────────────────────────" }, { kind: "info", text: ">>> Run" }]);
     setRunning(true);
-    try {
-      setRunOutput(await runWithTests(submission.code, submission.language, [], stdin));
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setRunOutput({ stdout: "", stderr: msg, exitCode: 1, duration: "0", testResults: [] });
-    } finally {
-      setRunning(false);
-    }
+    setWaitingInput(false);
+
+    const controlBuf = new SharedArrayBuffer(8);
+    const dataBuf = new SharedArrayBuffer(4096);
+    controlBufRef.current = controlBuf;
+    dataBufRef.current = dataBuf;
+
+    const worker = new Worker("/pyodide-worker.js");
+    workerRef.current = worker;
+
+    let outBuf = "";
+    let errBuf = "";
+    const flushOut = () => {
+      if (!outBuf) return;
+      const parts = outBuf.split("\n");
+      for (let i = 0; i < parts.length - 1; i++) appendLine({ kind: "out", text: parts[i] });
+      outBuf = parts[parts.length - 1];
+    };
+    const flushErr = () => {
+      if (!errBuf) return;
+      const parts = errBuf.split("\n");
+      for (let i = 0; i < parts.length - 1; i++) appendLine({ kind: "err", text: parts[i] });
+      errBuf = parts[parts.length - 1];
+    };
+
+    worker.onmessage = (e) => {
+      const { type, text, char, exitCode } = e.data;
+      if (type === "stdout_char") { outBuf += char; if (char === "\n") flushOut(); }
+      else if (type === "stderr_char") { errBuf += char; if (char === "\n") flushErr(); }
+      else if (type === "stdout") { outBuf += text; flushOut(); }
+      else if (type === "stderr") { errBuf += text; flushErr(); }
+      else if (type === "input_needed") {
+        if (outBuf) { appendLine({ kind: "out", text: outBuf }); outBuf = ""; }
+        setWaitingInput(true);
+      } else if (type === "done") {
+        if (outBuf) { appendLine({ kind: "out", text: outBuf }); outBuf = ""; }
+        if (errBuf) { appendLine({ kind: "err", text: errBuf }); errBuf = ""; }
+        setRunning(false);
+        setWaitingInput(false);
+        if (exitCode === 0) appendLine({ kind: "info", text: "Finished" });
+        worker.terminate();
+        workerRef.current = null;
+      }
+    };
+
+    worker.postMessage({ type: "run", code: submission.code, language: submission.language, controlBuf, dataBuf });
+  }
+
+  function submitInput() {
+    if (!waitingInput || !controlBufRef.current || !dataBufRef.current) return;
+    const val = inputVal;
+    setInputVal("");
+    setWaitingInput(false);
+    appendLine({ kind: "input_echo", text: val });
+    const control = new Int32Array(controlBufRef.current);
+    const dataArr = new Uint8Array(dataBufRef.current);
+    const encoded = new TextEncoder().encode(val + "\n");
+    dataArr.set(encoded, 0);
+    Atomics.store(control, 1, encoded.length);
+    Atomics.store(control, 0, 1);
+    Atomics.notify(control, 0);
+  }
+
+  function handleInputKey(e: React.KeyboardEvent) {
+    if (e.key === "Enter") { e.preventDefault(); submitInput(); }
+  }
+
+  function handleClear() {
+    setLines([{ kind: "info", text: "Shell cleared." }]);
   }
 
   return (
@@ -108,52 +197,67 @@ export function SubmissionDetailClient({ submission }: { submission: Submission 
 
       {/* Body */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        {/* Left: read-only editor */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <CodeEditor value={submission.code} language={submission.language} readOnly height="400px" />
-
-          {/* Stdin input */}
-          <div style={{ background: "#1a1f35", borderTop: "1px solid #0d0f1a", padding: "8px 16px" }}>
-            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", color: "#475569", marginBottom: 4 }}>Input (stdin) — one value per line</div>
-            <textarea
-              value={stdin}
-              onChange={e => setStdin(e.target.value)}
-              rows={2}
-              placeholder={"e.g.\n5\n10"}
-              style={{ width: "100%", background: "#0d0f1a", border: "1px solid #313654", borderRadius: 4, color: "#cbd5e1", fontFamily: "var(--font-mono)", fontSize: 12, padding: "6px 10px", resize: "vertical", boxSizing: "border-box" }}
-            />
-          </div>
-
-          {/* Action bar */}
-          <div style={{ padding: "10px 16px", background: "#151827", borderTop: "1px solid #0d0f1a" }}>
-            <button onClick={handleRun} disabled={running} style={{
-              background: "#232840", border: "1px solid #313654", color: "#cbd5e1",
-              fontSize: 13, fontWeight: 500, padding: "7px 16px", borderRadius: 4, cursor: "pointer",
-              display: "flex", alignItems: "center", gap: 6,
-            }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="#cbd5e1"><path d="M3 2l7 4-7 4V2z"/></svg>
-              {running ? "Running…" : "Run"}
-            </button>
-          </div>
-
-          {/* Output */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 200 }}>
-            <div style={{ background: "#f7f8fa", borderBottom: "1px solid #e2e6ed", padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.07em", color: "#2558d4", padding: "10px 0" }}>Output</span>
-              {runOutput && (
-                <span style={{ fontSize: 11, color: runOutput.exitCode === 0 ? "#16a34a" : "#dc2626" }}>
-                  Exit {runOutput.exitCode} · {runOutput.duration}s
-                </span>
-              )}
+        {/* Left: read-only editor + IDLE console */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <div style={{ flex: "0 0 50%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ background: "#f7f8fa", padding: "6px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, borderBottom: "1px solid #e2e6ed" }}>
+              <span style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em" }}>Submitted code (read-only)</span>
+              <button onClick={handleRun} disabled={running} style={{
+                background: "#2558d4", border: "none", color: "#fff",
+                fontSize: 12, fontWeight: 600, padding: "5px 14px", borderRadius: 4,
+                cursor: running ? "not-allowed" : "pointer", opacity: running ? 0.7 : 1,
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="white"><path d="M2 1l7 4-7 4V1z"/></svg>
+                {running ? "Running…" : "Run"}
+              </button>
             </div>
-            <div style={{ flex: 1, padding: "14px 18px", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.7, overflowY: "auto" }}>
-              {runOutput ? (
-                <>
-                  {runOutput.stdout && <pre style={{ margin: 0, color: "#162233" }}>{runOutput.stdout}</pre>}
-                  {runOutput.stderr && <pre style={{ margin: 0, color: "#dc2626" }}>{runOutput.stderr}</pre>}
-                  {!runOutput.stdout && !runOutput.stderr && <span style={{ color: "#94a3b8" }}>No output</span>}
-                </>
-              ) : <span style={{ color: "#94a3b8" }}>Run the code to see output.</span>}
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <CodeEditor value={submission.code} language={submission.language} readOnly height="100%" />
+            </div>
+          </div>
+
+          {/* Console */}
+          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", borderTop: "2px solid #e2e6ed" }}>
+            <div style={{ background: "#f7f8fa", padding: "5px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, borderBottom: "1px solid #e2e6ed" }}>
+              <span style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em" }}>Console</span>
+              <button onClick={handleClear} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 11, cursor: "pointer" }}>Clear</button>
+            </div>
+            <div
+              ref={termRef}
+              onClick={() => waitingInput && inputRef.current?.focus()}
+              style={{ flex: 1, overflowY: "auto", padding: "12px 16px", fontFamily: "var(--font-mono)", fontSize: 13, lineHeight: 1.9, background: "#ffffff", cursor: waitingInput ? "text" : "default" }}
+            >
+              {lines.map((l, i) => (
+                <div key={i} style={{
+                  color: l.kind === "err" ? "#dc2626" : l.kind === "info" ? "#94a3b8" : l.kind === "input_echo" ? "#2558d4" : "#162233",
+                  whiteSpace: "pre-wrap", wordBreak: "break-all",
+                }}>
+                  {l.text}
+                </div>
+              ))}
+
+              {waitingInput && (
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <input
+                    ref={inputRef}
+                    value={inputVal}
+                    onChange={e => setInputVal(e.target.value)}
+                    onKeyDown={handleInputKey}
+                    autoFocus
+                    style={{
+                      background: "transparent", border: "none", outline: "none",
+                      color: "#2558d4", fontFamily: "var(--font-mono)", fontSize: 13,
+                      flex: 1, caretColor: "#2558d4", padding: 0,
+                    }}
+                  />
+                  <span style={{ color: "#94a3b8", fontSize: 11, marginLeft: 8 }}>↵ Enter</span>
+                </div>
+              )}
+
+              {running && !waitingInput && (
+                <span style={{ color: "#94a3b8" }}>▋</span>
+              )}
             </div>
           </div>
         </div>
