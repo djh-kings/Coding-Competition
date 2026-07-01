@@ -46,23 +46,38 @@ export function WorkspaceClient() {
     fetch("/api/competition/active").then(r => r.json()).then(setComp);
   }, []);
 
+  // Load draft (or submitted code) from server
   useEffect(() => {
-    if (!comp) return;
-    const saved = localStorage.getItem(`code-${comp.id}`);
-    if (saved) setCode(saved);
-    const savedName = localStorage.getItem(`pseudonym-${comp.id}`);
-    if (savedName) setPseudonym(savedName);
-  }, [comp]);
+    let cancelled = false;
+    fetch("/api/student/draft").then(r => r.json()).then(data => {
+      if (cancelled) return;
+      if (data.code) setCode(data.code);
+      if (data.language) setLanguage(data.language);
+      if (data.submitted) {
+        setSubmitted(true);
+        setConfirmationCode(data.confirmationCode ?? null);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
 
+  // Fetch signed-in student name from cookie via a small endpoint (or use empty display until it lands)
   useEffect(() => {
-    if (!comp) return;
-    localStorage.setItem(`pseudonym-${comp.id}`, pseudonym);
-  }, [pseudonym, comp]);
+    fetch("/api/student/me").then(r => r.ok ? r.json() : null).then(d => { if (d?.pseudonym) setPseudonym(d.pseudonym); });
+  }, []);
 
+  // Debounced save-draft to server
   useEffect(() => {
-    if (!comp) return;
-    localStorage.setItem(`code-${comp.id}`, code);
-  }, [code, comp]);
+    if (!comp || submitted) return;
+    const t = setTimeout(() => {
+      fetch("/api/student/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, language }),
+      });
+    }, 700);
+    return () => clearTimeout(t);
+  }, [code, language, comp, submitted]);
 
   useEffect(() => {
     if (!comp) return;
@@ -217,17 +232,9 @@ export function WorkspaceClient() {
           <span style={{ color: "#374151" }}>·</span>
           <span style={{ fontSize: 12, color: "#64748b" }}>{timer}</span>
           <span style={{ color: "#374151" }}>·</span>
-          <label style={{ fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", gap: 6 }}>
-            Display name:
-            <input
-              value={pseudonym}
-              onChange={e => setPseudonym(e.target.value)}
-              placeholder="(optional pseudonym)"
-              maxLength={40}
-              disabled={submitted}
-              style={{ fontSize: 12, background: "#1e293b", border: "1px solid #2d3748", color: "#cbd5e1", borderRadius: 4, padding: "3px 8px", width: 180 }}
-            />
-          </label>
+          <span style={{ fontSize: 12, color: "#94a3b8" }}>
+            Signed in as <a href="/student/me" style={{ color: "#cbd5e1", fontWeight: 500, textDecoration: "none" }}>{pseudonym || "…"}</a>
+          </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <select value={language} onChange={e => setLanguage(e.target.value)} style={{ fontSize: 12, color: "#94a3b8", border: "1px solid #2d3748", borderRadius: 4, padding: "3px 8px", background: "#1e293b" }}>
@@ -243,7 +250,7 @@ export function WorkspaceClient() {
           </button>
           <button
             onClick={async () => {
-              if (!confirm("Sign out? Your code is saved in this browser but you will need your access code to come back.")) return;
+              if (!confirm("Sign out? Your code is saved to your account — you can sign back in from any browser.")) return;
               await fetch("/api/student/logout", { method: "POST" });
               window.location.href = "/";
             }}
@@ -308,7 +315,7 @@ export function WorkspaceClient() {
               </div>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
-              <CodeEditor value={code} onChange={setCode} language={language} height="100%" />
+              <CodeEditor value={code} onChange={setCode} language={language} height="100%" readOnly={submitted} />
             </div>
           </div>
 
@@ -382,7 +389,7 @@ export function WorkspaceClient() {
             </div>
             <h2 style={{ fontSize: 19, fontWeight: 600, color: "#162233", marginBottom: 8 }}>Submission received!</h2>
             <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>
-              Write down your confirmation code. Use it later at <strong style={{ color: "#162233" }}>/results</strong> to check whether you&apos;ve been shortlisted or won.
+              Your entry is in. You can sign back in with your access code and name any time to check your result.
             </p>
             <p style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.07em", marginBottom: 8 }}>Your confirmation code</p>
             <div style={{ display: "flex", borderRadius: 4, overflow: "hidden", border: "2px solid #2558d4", marginBottom: 24 }}>
@@ -391,15 +398,12 @@ export function WorkspaceClient() {
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="8" height="9" rx="1" stroke="white" strokeWidth="1.2"/><path d="M4 4V3a1 1 0 011-1h6a1 1 0 011 1v7a1 1 0 01-1 1h-1" stroke="white" strokeWidth="1.2"/></svg>
               </button>
             </div>
-            <button
-              onClick={async () => {
-                await fetch("/api/student/logout", { method: "POST" });
-                window.location.href = "/";
-              }}
-              style={{ width: "100%", background: "#2558d4", color: "#fff", border: "none", fontSize: 15, fontWeight: 600, padding: "12px", borderRadius: 4, cursor: "pointer" }}
+            <a
+              href="/student/me"
+              style={{ display: "block", textAlign: "center", background: "#2558d4", color: "#fff", border: "none", fontSize: 15, fontWeight: 600, padding: "12px", borderRadius: 4, cursor: "pointer", textDecoration: "none" }}
             >
-              OK — I have noted my code
-            </button>
+              OK — go to my dashboard
+            </a>
           </div>
         </div>
       )}

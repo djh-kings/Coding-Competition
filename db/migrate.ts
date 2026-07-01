@@ -65,6 +65,9 @@ async function migrate() {
   } catch {
     // Column already exists — fine
   }
+  try { await client.execute("ALTER TABLE access_codes ADD COLUMN claimed_pseudonym TEXT"); } catch {}
+  try { await client.execute("ALTER TABLE access_codes ADD COLUMN draft_code TEXT"); } catch {}
+  try { await client.execute("ALTER TABLE access_codes ADD COLUMN draft_language TEXT"); } catch {}
 
   console.log("✓ Tables created");
 }

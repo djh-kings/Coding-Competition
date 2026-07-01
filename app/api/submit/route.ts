@@ -25,14 +25,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Already submitted" }, { status: 409 });
   }
 
-  const { code, language, pseudonym } = await req.json() as { code: string; language: string; pseudonym?: string };
-  const cleanPseudonym = pseudonym?.trim().slice(0, 40) || null;
+  const { code, language } = await req.json() as { code: string; language: string };
 
   const ac = await db
     .select()
     .from(accessCodes)
     .where(eq(accessCodes.id, session.sub))
     .limit(1);
+
+  const cleanPseudonym = ac[0]?.claimedPseudonym?.trim().slice(0, 40) || null;
 
   const confirmationCode = randomCode();
   const submittedAt = new Date().toISOString();

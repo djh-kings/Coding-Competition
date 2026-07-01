@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 
 export default function StudentLoginPage() {
   const [code, setCode] = useState("");
+  const [pseudonym, setPseudonym] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function StudentLoginPage() {
       const res = await fetch("/api/auth/student", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, pseudonym }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -54,10 +55,10 @@ export default function StudentLoginPage() {
         </div>
 
         <h1 style={{ fontSize: 22, fontWeight: 600, color: "#162233", marginBottom: 8 }}>
-          Enter your access code
+          Sign in
         </h1>
         <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.55, marginBottom: 28 }}>
-          Your teacher will have given you a unique access code. Enter it below to begin.
+          Enter the access code your teacher gave you plus a name of your choosing. <strong>First time?</strong> Pick any name — it becomes your login and how your entry is credited.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -68,7 +69,7 @@ export default function StudentLoginPage() {
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="e.g. CODE01"
+            placeholder="e.g. L4CS1-AB23CD"
             style={{
               width: "100%",
               padding: "11px 14px",
@@ -80,6 +81,27 @@ export default function StudentLoginPage() {
               borderRadius: 4,
               outline: "none",
               boxSizing: "border-box",
+              marginBottom: 14,
+            }}
+          />
+          <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#475569", marginBottom: 8 }}>
+            Your name
+          </label>
+          <input
+            type="text"
+            value={pseudonym}
+            onChange={(e) => setPseudonym(e.target.value)}
+            placeholder="e.g. Alice or CodeMaster42"
+            maxLength={40}
+            style={{
+              width: "100%",
+              padding: "11px 14px",
+              fontSize: 15,
+              color: "#162233",
+              border: "1px solid #d1d5db",
+              borderRadius: 4,
+              outline: "none",
+              boxSizing: "border-box",
             }}
           />
           {error && (
@@ -87,7 +109,7 @@ export default function StudentLoginPage() {
           )}
           <button
             type="submit"
-            disabled={loading || !code}
+            disabled={loading || !code || !pseudonym.trim()}
             style={{
               width: "100%",
               background: "#2558d4",
@@ -97,9 +119,9 @@ export default function StudentLoginPage() {
               padding: 12,
               borderRadius: 4,
               border: "none",
-              cursor: loading || !code ? "not-allowed" : "pointer",
+              cursor: loading || !code || !pseudonym.trim() ? "not-allowed" : "pointer",
               marginTop: 14,
-              opacity: loading || !code ? 0.7 : 1,
+              opacity: loading || !code || !pseudonym.trim() ? 0.7 : 1,
             }}
           >
             {loading ? "Checking…" : "Continue"}

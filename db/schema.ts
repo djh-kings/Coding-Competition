@@ -31,6 +31,9 @@ export const accessCodes = sqliteTable("access_codes", {
     .notNull()
     .references(() => competitions.id),
   usedAt: text("used_at"),
+  claimedPseudonym: text("claimed_pseudonym"),
+  draftCode: text("draft_code"),
+  draftLanguage: text("draft_language"),
 });
 
 export const submissions = sqliteTable("submissions", {
