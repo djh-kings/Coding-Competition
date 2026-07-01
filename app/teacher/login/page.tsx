@@ -22,7 +22,7 @@ export default function TeacherLoginPage() {
         body: JSON.stringify({ username, password }),
       });
       if (res.ok) {
-        router.push("/teacher/migrate");
+        router.push("/teacher/admin");
       } else {
         const data = await res.json();
         setError(data.error ?? "Invalid credentials");
