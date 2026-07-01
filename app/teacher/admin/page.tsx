@@ -7,6 +7,7 @@ import { eq, desc } from "drizzle-orm";
 import { Logo } from "@/components/Logo";
 import { DeleteCompetitionButton } from "./DeleteCompetitionButton";
 import { ListedToggleButton } from "./ListedToggleButton";
+import { MigrateButton } from "./MigrateButton";
 
 export const dynamic = "force-dynamic";
 
@@ -99,9 +100,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <Logo />
           <span style={{ fontSize: 15, fontWeight: 600, color: "#162233" }}>All competitions</span>
         </div>
-        <form action="/api/teacher/logout" method="POST">
-          <button style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 13, padding: "8px 16px", borderRadius: 4, cursor: "pointer" }}>Sign out</button>
-        </form>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <MigrateButton />
+          <form action="/api/teacher/logout" method="POST">
+            <button style={{ background: "#fff", border: "1px solid #d1d5db", color: "#475569", fontSize: 13, padding: "8px 16px", borderRadius: 4, cursor: "pointer" }}>Sign out</button>
+          </form>
+        </div>
       </nav>
 
       <div style={{ maxWidth: 980, margin: "32px auto", padding: "0 24px" }}>
