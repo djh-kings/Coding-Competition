@@ -49,7 +49,10 @@ export default async function LandingPage() {
             <Logo />
             <span style={{ fontSize: 15, fontWeight: 600, color: "#162233" }}>{compName}</span>
           </div>
-          <Link href="/teacher/login" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Teacher login →</Link>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <Link href="/help" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Student guide</Link>
+            <Link href="/teacher/login" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Teacher login →</Link>
+          </div>
         </nav>
         <main style={{ flex: 1, background: "linear-gradient(180deg, #f7f8fa 0%, #fff 100%)", padding: "72px 32px 64px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <p style={{ fontSize: 11, color: "#2558d4", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 18 }}>Autumn Term 2026</p>
@@ -61,6 +64,7 @@ export default async function LandingPage() {
           </div>
         </main>
         <footer style={{ padding: "16px 32px", borderTop: "1px solid #e2e6ed", textAlign: "center", fontSize: 12, color: "#94a3b8" }}>
+          <Link href="/help" style={{ color: "#2558d4", textDecoration: "none", marginRight: 12 }}>Student guide</Link>
           <Link href="/results" style={{ color: "#2558d4", textDecoration: "none", marginRight: 12 }}>Check your result →</Link>
           © 2026 KCS Code Challenge
         </footer>
